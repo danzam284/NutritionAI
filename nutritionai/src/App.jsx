@@ -1,33 +1,34 @@
 import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+import axios from 'axios';
 import './App.css'
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [response, setResponse] = useState("");
+
+  /**
+   * Uploaded file is converted to base 64
+   * POST request is then triggered, sending image to the backend
+   * Response is then displayed
+   */
+  async function sendFile(e) {
+    const uploadedFile = e.target.files[0];
+    const reader = new FileReader();
+    reader.addEventListener("load", async (e) => {
+      console.log(e.target.result);
+      const { data } = await axios.post("http://localhost:3000/upload", {
+        image: e.target.result
+      });
+      setResponse(data);
+    });
+    reader.readAsDataURL(uploadedFile);
+  }
 
   return (
     <>
       <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+        <input type='file' accept="image/*" onInput={(e) => sendFile(e)}></input>
+        <p>{response}</p>
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
     </>
   )
 }
