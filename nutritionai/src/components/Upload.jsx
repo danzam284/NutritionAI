@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import axios from 'axios';
-import './App.css'
+import '../App.css'
 
-function App() {
+function Upload() {
   const [response, setResponse] = useState("");
 
   /**
@@ -33,4 +33,4 @@ function App() {
   )
 }
 
-export default App
+export default Upload;
