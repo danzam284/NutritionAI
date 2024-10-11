@@ -1,7 +1,7 @@
 import cors from 'cors';
-import express from "express";
-
 import dotenv from 'dotenv';
+import express from "express";
+import fs from 'fs';
 dotenv.config();
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
@@ -57,6 +57,7 @@ async function sendAPICall(filename, mimeType) {
  */
 app.post("/upload", async (req, res) => {
 
+  const error = []
   // Gemini Action
   try {
     const image = req.body.image;
@@ -67,21 +68,19 @@ app.post("/upload", async (req, res) => {
 
     fs.writeFileSync("image", buffer);
     const geminiResponse = await sendAPICall("image", mimeType);
-    return res.status(200).send(geminiResponse);
-  } catch(e) {
+    // return res.status(200).send(geminiResponse);
+  } catch (e) {
     console.log(e);
-    return res.status(400).send(e);
+    error.push(e)
   }
 
   // DB Action
   try {
     const image = req.body.image;
     const base64Image = image.replace(/^data:image\/[a-z]+;base64,/, "");
-
     const insert_image = {
       base64Image
     }
-
     try {
       const newDoc = await db.insertAsync(insert_image)
       // newDoc is the newly inserted document, including its _id
@@ -92,10 +91,19 @@ app.post("/upload", async (req, res) => {
     }
   } catch (e) {
     console.log(e);
-    return res.status(400).send(e);
+    error.push(e)
   }
+  if (error.length != 0) {
+    return res.status(400).send(error)
+  } else {
+    return res.status(200)
+  }
+});
 
-  console.log("done")
+app.get("/savedmeal", async (req, res) => {
+  let doc = await db.findAsync({ "base64Image": { $exists: true } })
+  console.log(doc)
+  res.json(doc)
 });
 
 app.listen(3000, () => {
