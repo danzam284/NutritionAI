@@ -57,6 +57,7 @@ async function sendAPICall(filename, mimeType) {
  */
 app.post("/upload", async (req, res) => {
 
+  let geminiResponse = "";
   const error = []
   // Gemini Action
   try {
@@ -67,8 +68,7 @@ app.post("/upload", async (req, res) => {
     const buffer = Buffer.from(base64Image, 'base64');
 
     fs.writeFileSync("image", buffer);
-    const geminiResponse = await sendAPICall("image", mimeType);
-    // return res.status(200).send(geminiResponse);
+    geminiResponse = await sendAPICall("image", mimeType);
   } catch (e) {
     console.log(e);
     error.push(e)
@@ -79,7 +79,8 @@ app.post("/upload", async (req, res) => {
     const image = req.body.image;
     const base64Image = image.replace(/^data:image\/[a-z]+;base64,/, "");
     const insert_image = {
-      base64Image
+      base64Image,
+      geminiResponse
     }
     try {
       const newDoc = await db.insertAsync(insert_image)
@@ -96,7 +97,7 @@ app.post("/upload", async (req, res) => {
   if (error.length != 0) {
     return res.status(400).send(error)
   } else {
-    return res.status(200)
+    return res.status(200).send(geminiResponse);
   }
 });
 
