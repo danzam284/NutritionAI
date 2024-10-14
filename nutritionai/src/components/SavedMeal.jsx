@@ -47,8 +47,10 @@ const SavedMeal = () => {
             <div className="image-container" key={index}>
               <img
                 src={`data:image/png;base64,${item.base64Image}`}
+                style={{ width: '200px', margin: '10px' }}
                 alt={`Meal ${index + 1}`}
               />
+              <p>{item.geminiResponse}</p>
             </div>
           ))
         ) : (

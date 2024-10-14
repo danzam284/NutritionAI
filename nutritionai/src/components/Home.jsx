@@ -3,7 +3,10 @@ import { Link } from "react-router-dom";
 function Home() {
     return <div>
         <h1>NutritionAI Homepage</h1>
-        <Link to="/upload">Upload</Link>
+        <div id='nav'>
+            <Link to="/upload">Upload</Link>
+            <Link to="/savedmeal">Saved Meals</Link>
+        </div>
     </div>
 }
 
