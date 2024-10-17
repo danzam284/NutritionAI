@@ -1,5 +1,5 @@
 import express from "express";
-import { sendAPICall, nutritionAPICall } from "../services/apiServices.js";
+import { sendAPICall, nutritionFacts } from "../services/apiServices.js";
 import path from "path";
 import { fileURLToPath } from "url";
 import fs from "fs";
@@ -33,10 +33,22 @@ router.route("/upload").post(async (req, res) => {
     // Prompt GenAI the image
     // const geminiResponse = await sendAPICall("image", mimeType);
     const geminiResponse = await sendAPICall(filename, mimeType);
-    let macros;
+
+    // Get the macronutrients of the food from food data central api
+    let fooddata;
     if (geminiResponse) {
-      macros = await nutritionAPICall(geminiResponse);
+      fooddata = await nutritionFacts(geminiResponse);
     }
+
+    let result = {
+      food: fooddata.description,
+      calories: `${fooddata.foodNutrients[3].value} ${fooddata.foodNutrients[3].unitName}`,
+      fat: `${fooddata.foodNutrients[1].value} ${fooddata.foodNutrients[1].unitName}`,
+      carbohydrates: `${fooddata.foodNutrients[2].value} ${fooddata.foodNutrients[2].unitName}`,
+      protein: `${fooddata.foodNutrients[0].value} ${fooddata.foodNutrients[0].unitName}`,
+      sodium: `${fooddata.foodNutrients[8].value} ${fooddata.foodNutrients[8].unitName}`,
+    };
+
     // Clean up file after processing
     if (fs.existsSync(filepath)) {
       fs.unlinkSync(filepath); // Only delete if the file exists
@@ -44,9 +56,7 @@ router.route("/upload").post(async (req, res) => {
       console.log("Error: File not saved.");
     }
 
-    console.log(geminiResponse);
-    console.log(macros);
-    return res.status(200).send(geminiResponse);
+    return res.status(200).send(result);
   } catch (e) {
     console.log(e);
     return res.status(400).send(e);

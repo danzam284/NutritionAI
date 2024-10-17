@@ -9,7 +9,7 @@ function Upload() {
   const [image, setImage] = useState();
 
   /**
-   * Uploaded file is converted to base 64
+   * Uploaded file is converted to base 64task mamnager
    * POST request is then triggered, sending image to the backend
    * Response is then displayed
    */
@@ -43,12 +43,12 @@ function Upload() {
         )}
         {response && (
           <div>
-            <p>Item: {response["food name"] || response["food"] || "N/A"}</p>
-            <p>Weight: {response["approximate weight"] || response["weight"] || "N/A"}</p>
+            <p>Item: {response["food"] || "N/A"}</p>
             <p>Calories: {response["calories"] || "N/A"}</p>
             <p>Fat: {response["fat"] || "N/A"}</p>
             <p>Protein: {response["protein"] || "N/A"}</p>
-            <p>Carbohydrates: {response["sodium"] || "N/A"}</p>
+            <p>Carbohydrates: {response["carbohydrates"] || "N/A"}</p>
+            <p>Sodium: {response["sodium"] || "N/A"}</p>
           </div>
         )}
       </div>

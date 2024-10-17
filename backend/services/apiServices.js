@@ -34,6 +34,7 @@ export const getAccessToken = async () => {
           username: clientId,
           password: clientSecret,
         },
+        json: true,
       }
     );
 
@@ -68,13 +69,11 @@ export async function sendAPICall(filename, mimeType) {
           fileUri: uploadResult.file.uri,
         },
       },
-      // { text: "What is the item in the uploaded image?" },
-      {
-        text: "What is the food item in the image? Provide a one-word answer and approximate weight",
-      },
+      { text: "what is the item in the uploaded image? Respond with just the food name." },
     ]);
-    const text = result.response.text();
-    return text;
+    const rawtext = result.response.text();
+    const cleantext = rawtext.trim(); // Remove leading and trailing whitespace
+    return cleantext;
   } catch (e) {
     console.error("Error sending API call to Gemini:", e);
     throw new Error("Failed to process the image.");
@@ -82,27 +81,31 @@ export async function sendAPICall(filename, mimeType) {
 }
 
 /**
- * Sends an API call to api-ninja's nutrition API with 2 parameters: Gemini's response (text)
- * @param {string} text - The response text from Gemini API which contains food item name and approx. weight
- * @returns {Object} - The JSON response from nutrition API, containing the macros and nutritional details about the food.
+ *
+ * @param {string} text The food item that Gemini AI determined
+ * @returns object from FDC API of food nutrients
  */
-export async function nutritionAPICall(text) {
+export async function nutritionFacts(text) {
   try {
-    const accessToken = await getAccessToken();
-    const foodId = 33691;
-    let result = axios.get(
-      `https://platform.fatsecret.com/rest/food/v4?food_id=${foodId}&format=json`,
-      {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
-        },
-      }
-    );
-    console.log(result);
-    return result;
+    const base_url = "https://api.nal.usda.gov/fdc/v1/foods/search";
+    const api_key = `?api_key=${process.env.USDA_KEY}`;
+    const query = `&query=${text}`;
+
+    // const response = await axios.get(base_url + path_url + api_key + query);
+    const response = await axios.get(base_url + api_key + query, {
+      params: {
+        pageNumber: 1,
+        pageSize: 25,
+      },
+    });
+
+    if (response) {
+      return response.data.foods[0];
+    } else {
+      throw Error(`No responses`);
+    }
   } catch (e) {
-    console.error("Error sending API call to api-ninja:", e);
-    throw new Error("Failed to process the food macros.");
+    console.error(e);
+    throw new Error(`FDC API failed to process`);
   }
 }

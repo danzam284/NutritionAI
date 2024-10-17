@@ -1,4 +1,4 @@
-import { sendAPICall, getAccessToken, nutritionAPICall } from "./services/apiServices.js";
+import { sendAPICall, getAccessToken, nutritionFacts } from "./services/apiServices.js";
 import { GoogleAIFileManager } from "@google/generative-ai/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
@@ -30,18 +30,26 @@ describe("sendAPICall Tests", () => {
   });
 });
 
-describe("oauth tests for fatsecret", () => {
-  // Return a valid token
-  test("should return a token", async () => {
-    const result = await getAccessToken();
-    expect(result).toBeDefined();
-  });
-});
+// describe("oauth tests for fatsecret", () => {
+//   // Return a valid token
+//   test("should return a token", async () => {
+//     const result = await getAccessToken();
+//     expect(result).toBeDefined();
+//   });
+// });
 
-describe("nutritionAPICall tests for fatsecret", () => {
+// describe("nutritionAPICall tests for fatsecret", () => {
+//   // Return a valid token
+//   test("should return a ", async () => {
+//     const result = await nutritionAPICall("text");
+//     expect(result).toBeDefined();
+//   });
+// });
+
+describe("fdc tests for fatsecret", () => {
   // Return a valid token
-  test("should return a ", async () => {
-    const result = await nutritionAPICall("text");
+  test("should return valid data for chicken", async () => {
+    const result = await nutritionFacts("chicken");
     expect(result).toBeDefined();
   });
 });
