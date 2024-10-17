@@ -44,7 +44,7 @@ async function sendAPICall(filename, mimeType) {
         fileUri: uploadResult.file.uri
       }
     },
-    { text: "What is the item in the uploaded image?" },
+    { text: "What is the item in the uploaded image?,can you describe the image in detail?,what nutritional information can you tell me about this image?, can you tell me an added estimate of calories from this image?, can you tell me how healthy this image is?" },
   ]);
   const text = result.response.text();
   return text;
