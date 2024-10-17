@@ -13,6 +13,8 @@ const __dirname = path.dirname(__filename);
 import { GoogleAIFileManager } from "@google/generative-ai/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
+
+
 // DB
 import Datastore from "@seald-io/nedb";
 
@@ -31,6 +33,7 @@ const model = genAI.getGenerativeModel({
 // Init DB
 const db = new Datastore({ filename: "data/users.db", autoload: true });
 
+
 /**
  * Sends an API call to gemini was 2 components: the image and prompt
  * @param {filename} The name of the image file to be uploaded as part of the Gemini prompt
@@ -40,7 +43,7 @@ const db = new Datastore({ filename: "data/users.db", autoload: true });
 async function sendAPIDescription(filename, mimeType) {
   const uploadResult = await fileManager.uploadFile(filename, {
     mimeType: mimeType,
-    displayName: "Image",
+    displayName: filename,
   });
 
   const result = await model.generateContent([
@@ -51,37 +54,13 @@ async function sendAPIDescription(filename, mimeType) {
       },
     },
     {
-      text: "What is the item in the uploaded image?,can you describe the image in detail?,what nutritional information can you tell me about this image?, can you tell me an added estimate of calories from this image?, can you tell me how healthy this image is?",
+      text: "There is an uploaded food image. Your goal is to get each different part of the image and return it in a standard format of {food1}|{food2}|{foodn}. For example, if the picture was a cheeseburger with fries and a beer, you would return cheeseburger|fries|beer",
     },
   ]);
   const text = result.response.text();
   return text;
 }
 
-export async function sendAPICall(filename, mimeType) {
-  try {
-    const uploadResult = await fileManager.uploadFile(filename, {
-      mimeType: mimeType,
-      displayName: "Image",
-    });
-
-    const result = await model.generateContent([
-      {
-        fileData: {
-          mimeType: uploadResult.file.mimeType,
-          fileUri: uploadResult.file.uri,
-        },
-      },
-      { text: "what is the item in the uploaded image? Respond with just the food name." },
-    ]);
-    const rawtext = result.response.text();
-    const cleantext = rawtext.trim(); // Remove leading and trailing whitespace
-    return cleantext;
-  } catch (e) {
-    console.error("Error sending API call to Gemini:", e);
-    throw new Error("Failed to process the image.");
-  }
-}
 
 /**
  *
@@ -114,8 +93,9 @@ export async function nutritionFacts(text) {
 }
 
 app.post("/upload", async (req, res) => {
-  let geminiResponse = "";
+  let cumulativeFoodData;
   const error = [];
+  let result = {};
   // Gemini Action
   try {
     const image = req.body.image;
@@ -133,33 +113,47 @@ app.post("/upload", async (req, res) => {
     fs.writeFileSync(filepath, buffer);
 
     // Prompt GenAI the image
-    const geminiResponse = await sendAPICall(filename, mimeType);
-    const geminiFoodDescription = await sendAPIDescription(filename, mimeType);
+    const geminiResponse = await sendAPIDescription(filename, mimeType);
+    const geminiIngredients = geminiResponse.split("|");
 
     // Get the macronutrients of the food from food data central api
     let fooddata;
     if (geminiResponse) {
-      fooddata = await nutritionFacts(geminiResponse);
+      for (let i = 0; i < geminiIngredients.length; i++) {
+        fooddata = await nutritionFacts(geminiIngredients[i]);
+        console.log(fooddata.foodNutrients.length);
+        if (i === 0) {
+          cumulativeFoodData = {
+            base64Image: base64Image,
+            food: fooddata.description,
+            calories: fooddata.foodNutrients[3]?.value,
+            fat: fooddata.foodNutrients[1]?.value,
+            carbohydrates: fooddata.foodNutrients[2]?.value,
+            protein: fooddata.foodNutrients[0]?.value,
+            sodium: fooddata.foodNutrients[8]?.value,
+            sugar: fooddata.foodNutrients[4]?.value
+          }
+        } else {
+          cumulativeFoodData["food"] += ", " + fooddata.description
+          cumulativeFoodData["calories"] += fooddata.foodNutrients[3]?.value ?? 0;
+          cumulativeFoodData["fat"] += fooddata.foodNutrients[1]?.value ?? 0;
+          cumulativeFoodData["carbohydrates"] += fooddata.foodNutrients[2]?.value ?? 0;
+          cumulativeFoodData["protein"] += fooddata.foodNutrients[0]?.value ?? 0;
+          cumulativeFoodData["sodium"] += fooddata.foodNutrients[8]?.value ?? 0;
+          cumulativeFoodData["sugar"] += fooddata.foodNutrients[4]?.value ?? 0;
+        }
+      }
     }
 
-    let result = {
-      geminiFoodDescription: geminiFoodDescription,
-      food: fooddata.description,
-      calories: `${fooddata.foodNutrients[3].value} ${fooddata.foodNutrients[3].unitName}`,
-      fat: `${fooddata.foodNutrients[1].value} ${fooddata.foodNutrients[1].unitName}`,
-      carbohydrates: `${fooddata.foodNutrients[2].value} ${fooddata.foodNutrients[2].unitName}`,
-      protein: `${fooddata.foodNutrients[0].value} ${fooddata.foodNutrients[0].unitName}`,
-      sodium: `${fooddata.foodNutrients[8].value} ${fooddata.foodNutrients[8].unitName}`,
-    };
 
     // Clean up file after processing
     if (fs.existsSync(filepath)) {
+      console.log("here");
       fs.unlinkSync(filepath); // Only delete if the file exists
     } else {
       console.log("Error: File not saved.");
     }
 
-    return res.status(200).send(result);
   } catch (e) {
     console.log(e);
     error.push(e);
@@ -167,14 +161,9 @@ app.post("/upload", async (req, res) => {
 
   // DB Action
   try {
-    const image = req.body.image;
-    const base64Image = image.replace(/^data:image\/[a-z]+;base64,/, "");
-    const insert_image = {
-      base64Image,
-      geminiResponse,
-    };
     try {
-      const newDoc = await db.insertAsync(insert_image);
+      const newDoc = await db.insertAsync(cumulativeFoodData);
+      console.log(newDoc);
       // newDoc is the newly inserted document, including its _id
       // newDoc has no key called notToBeSaved since its value was undefined
     } catch (e) {
@@ -188,13 +177,12 @@ app.post("/upload", async (req, res) => {
   if (error.length != 0) {
     return res.status(400).send(error);
   } else {
-    return res.status(200).send(geminiResponse);
+    return res.status(200).json(cumulativeFoodData);
   }
 });
 
 app.get("/savedmeal", async (req, res) => {
   let doc = await db.findAsync({ base64Image: { $exists: true } });
-  console.log(doc);
   res.json(doc);
 });
 
