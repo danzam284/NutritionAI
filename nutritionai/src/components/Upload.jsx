@@ -33,8 +33,8 @@ function Upload() {
   return (
     <>
       <div>
-        <h1>Upload Image Page`</h1>
         <Link to="/">Home</Link>
+        <h1>Upload Image Page</h1>
         <input type="file" accept="image/*" onInput={(e) => sendFile(e)}></input>
         {isSubmitted && (
           <div>
@@ -43,17 +43,17 @@ function Upload() {
         )}
         {response && (
           <div>
-            <p>{response["geminiFoodDescription"] || ""}</p>
+            <p>{response["food"] || ""}</p>
           </div>
         )}
         {response && (
           <div>
-            <p>Item: {response["food"] || "N/A"}</p>
-            <p>Calories: {response["calories"] || "N/A"}</p>
-            <p>Fat: {response["fat"] || "N/A"}</p>
-            <p>Protein: {response["protein"] || "N/A"}</p>
-            <p>Carbohydrates: {response["carbohydrates"] || "N/A"}</p>
-            <p>Sodium: {response["sodium"] || "N/A"}</p>
+            <p>Calories: {response["calories"] + " kCal" || "N/A"}</p>
+            <p>Fat: {response["fat"] + " g" || "N/A"}</p>
+            <p>Protein: {response["protein"] + " g" || "N/A"}</p>
+            <p>Carbohydrates: {response["carbohydrates"] + " g" || "N/A"}</p>
+            <p>Sodium: {response["sodium"] + " mg" || "N/A"}</p>
+            <p>Sugar: {response["sugar"] + " g" || "N/A"}</p>
           </div>
         )}
       </div>
