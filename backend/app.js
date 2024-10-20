@@ -170,6 +170,7 @@ app.post("/upload", async (req, res) => {
             base64Image: base64Image,
             poster: posterId,
             food: fooddata.description,
+            likes: [],
             calories: fooddata.foodNutrients[3]?.value,
             fat: fooddata.foodNutrients[1]?.value,
             carbohydrates: fooddata.foodNutrients[2]?.value,
