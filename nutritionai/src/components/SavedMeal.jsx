@@ -1,33 +1,35 @@
-// SavedMeal.js
 import axios from 'axios';
 import { Link } from "react-router-dom";
 import { useState, useEffect } from 'react';
-// import './SavedMeal.css'; // Optional: For styling
+import { useUser } from '@clerk/clerk-react';
 
 const SavedMeal = () => {
   const [images, setImages] = useState([]);     // State to store images
   const [loading, setLoading] = useState(true); // State for loading
   const [error, setError] = useState(null);     // State for errors
+  const { isSignedIn, user } = useUser();
 
   useEffect(() => {
     // Function to fetch images from the backend
-    const fetchImages = async () => {
-      try {
-        const response = await axios.get('http://localhost:3000/savedmeal');
-        console.log('Response:', response);
-        const data = response.data;
-        console.log('Data:', data);
-        setImages(data);
-      } catch (err) {
-        console.error('Error fetching images:', err);
-        setError(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchImages();
-  }, []);
+    if (isSignedIn) {
+      const fetchImages = async () => {
+        try {
+          const response = await axios.get(`http://localhost:3000/savedmeal/${user.id}`);
+          console.log('Response:', response);
+          const data = response.data;
+          console.log('Data:', data);
+          setImages(data);
+        } catch (err) {
+          console.error('Error fetching images:', err);
+          setError(err);
+        } finally {
+          setLoading(false);
+        }
+      };
+  
+      fetchImages();
+    }
+  }, [isSignedIn]);
 
   // Loading state
   if (loading) {
