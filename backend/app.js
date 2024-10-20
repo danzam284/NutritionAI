@@ -59,6 +59,7 @@ async function createUser(id, email, username, pic) {
       email,
       username,
       notifications: [{seen: false, message: "Welcome to NutritionAI!"}],
+      friends: [],
       profilePicture: pic,
       score: 0
   }
