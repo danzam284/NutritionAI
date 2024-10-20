@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
+import { useUser } from "@clerk/clerk-react";
 import "../App.css";
 
 function Upload() {
   const [response, setResponse] = useState();
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [image, setImage] = useState();
+  const { isSignedIn, user } = useUser();
 
   /**
    * Uploaded file is converted to base 64task mamnager
@@ -21,9 +23,9 @@ function Upload() {
       console.log(e.target.result);
       const { data } = await axios.post("http://localhost:3000/upload", {
         image: e.target.result,
+        id: user.id
       });
       const parsedData = typeof data === "string" ? JSON.parse(data) : data;
-      console.log(parsedData);
       setResponse(parsedData);
     });
     reader.readAsDataURL(uploadedFile);

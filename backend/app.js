@@ -13,8 +13,6 @@ const __dirname = path.dirname(__filename);
 import { GoogleAIFileManager } from "@google/generative-ai/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-
-
 // DB
 import Datastore from "@seald-io/nedb";
 
@@ -31,7 +29,45 @@ const model = genAI.getGenerativeModel({
 });
 
 // Init DB
-const db = new Datastore({ filename: "data/users.db", autoload: true });
+const usersDB = new Datastore({ filename: "data/user.db", autoload: true });
+const mealsDB = new Datastore({ filename: "data/meal.db", autoload: true });
+
+
+/**
+ * Checks whether a user is already registered in the database based on their ID
+ * @param {id} The ID of the user to be checked.
+ * @returns A boolean whether the user already exists
+ */
+async function userExists(id) {
+  return new Promise((resolve, reject) => {
+      usersDB.findOne({ id }, (err, exists) => {
+          if (err) {
+              reject(err);
+          } else {
+              resolve(!!exists);
+          }
+      });
+  });
+}
+
+/**
+ * Adds a new user to the DB
+ */
+async function createUser(id, email, username, pic) {
+  const newUser = {
+      id,
+      email,
+      username,
+      notifications: [{seen: false, message: "Welcome to NutritionAI!"}],
+      profilePicture: pic,
+      score: 0
+  }
+  usersDB.insert(newUser, (error, newDoc) => {
+      if (error) {
+          console.error(err)
+      }
+  })
+}
 
 
 /**
@@ -92,13 +128,20 @@ export async function nutritionFacts(text) {
   }
 }
 
+app.post("/newUser", async (req, _) => {
+  const exists = await userExists(req.body.id);
+  if (!exists) {
+      createUser(req.body.id, req.body.email, req.body.username, req.body.profilePicture);
+  }
+});
+
 app.post("/upload", async (req, res) => {
   let cumulativeFoodData;
   const error = [];
-  let result = {};
   // Gemini Action
   try {
     const image = req.body.image;
+    const posterId = req.body.id;
 
     const mimeType = image.match(/^data:(image\/[a-zA-Z]+);base64,/)[1];
     const base64Image = image.replace(/^data:image\/[a-z]+;base64,/, "");
@@ -121,10 +164,10 @@ app.post("/upload", async (req, res) => {
     if (geminiResponse) {
       for (let i = 0; i < geminiIngredients.length; i++) {
         fooddata = await nutritionFacts(geminiIngredients[i]);
-        console.log(fooddata.foodNutrients.length);
         if (i === 0) {
           cumulativeFoodData = {
             base64Image: base64Image,
+            poster: posterId,
             food: fooddata.description,
             calories: fooddata.foodNutrients[3]?.value,
             fat: fooddata.foodNutrients[1]?.value,
@@ -162,8 +205,7 @@ app.post("/upload", async (req, res) => {
   // DB Action
   try {
     try {
-      const newDoc = await db.insertAsync(cumulativeFoodData);
-      console.log(newDoc);
+      await mealsDB.insertAsync(cumulativeFoodData);
       // newDoc is the newly inserted document, including its _id
       // newDoc has no key called notToBeSaved since its value was undefined
     } catch (e) {
@@ -181,8 +223,9 @@ app.post("/upload", async (req, res) => {
   }
 });
 
-app.get("/savedmeal", async (req, res) => {
-  let doc = await db.findAsync({ base64Image: { $exists: true } });
+app.get("/savedmeal/:id", async (req, res) => {
+  const userId = req.params.id;
+  let doc = await mealsDB.findAsync({ poster: userId });
   res.json(doc);
 });
 
