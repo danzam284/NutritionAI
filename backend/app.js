@@ -104,7 +104,7 @@ app.post("/upload", async (req, res) => {
 app.get("/savedmeal", async (req, res) => {
   let doc = await db.findAsync({ "base64Image": { $exists: true } })
   console.log(doc)
-  res.json(doc)
+  res.status(200).json(doc)
 });
 
 app.listen(3000, () => {
