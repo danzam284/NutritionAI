@@ -1,25 +1,21 @@
-import { createRoot } from 'react-dom/client';
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import Upload from './components/Upload.jsx';
-import Home from './components/Home.jsx';
-import SavedMeal from './components/Savedmeal.jsx';
+import ReactDOM from 'react-dom/client'
+import React from 'react'
+import { BrowserRouter } from 'react-router-dom';
+import App from './App.jsx';
+import { ClerkProvider } from '@clerk/clerk-react';
 import './index.css';
 
-const router = createBrowserRouter([
-  {
-    path: "/",
-    element: <Home />,
-  },
-  {
-    path: "/upload",
-    element: <Upload />,
-  },
-  {
-    path: "/savedmeal",
-    element: <SavedMeal />,
-  }
-]);
+const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
-createRoot(document.getElementById('root')).render(
-  <RouterProvider router={router} />
+if (!PUBLISHABLE_KEY) {
+  throw new Error("Missing Publishable Key");
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(
+    <BrowserRouter>
+        <ClerkProvider publishableKey={PUBLISHABLE_KEY} afterSignOutUrl="/">
+            <App />
+        </ClerkProvider>
+    </BrowserRouter>
 );
