@@ -136,6 +136,49 @@ app.post("/newUser", async (req, _) => {
   }
 });
 
+//Request takes 3 inputs: current user's id, other user's username, boolean whether adding or removing
+app.post("/toggleFriend", async (req, res) => {
+  const userId = req.body.id;
+  const otherUsername = req.body.otherUsername;
+  const adding = req.body.adding;
+
+  const currentUser = await usersDB.findAsync({ id: userId });
+  const otherUser = await usersDB.findAsync({ username: otherUser });
+  const currentUserFriends = currentUser[0].friends;
+
+  if (otherUser.length === 0) {
+    return res.status(400).send(`Could not find a user with name ${otherUsername}.`);
+  }
+
+  if (userId === otherUser[0].id) {
+    return res.status(400).send("You cannot add or remove yourself as a friend.");
+  }
+
+  //User is already friends with other user
+  if (currentUserFriends.includes(otherUser[0].id)) {
+    if (adding) {
+      return res.status(400).send(`You are already friends with ${otherUsername}.`);
+    } else {
+      await usersDB.updateAsync(
+        { id: userId },
+        { $push: { friends: otherUser[0].id }}
+      );
+    }
+  } else { //User is not friends with other user
+    if (!adding) {
+      return res.status(400).send(`You cannot remove ${otherUsername} as a friend because you are not friends with them.`);
+    } else {
+      await usersDB.updateAsync(
+        { id: userId },
+        { $pull: { friends: otherUser[0].id }}
+      );
+    }
+  }
+
+  res.status(200).send("Changes Made.");
+
+});
+
 app.post("/upload", async (req, res) => {
   let cumulativeFoodData;
   const error = [];
