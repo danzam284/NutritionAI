@@ -32,7 +32,6 @@ const model = genAI.getGenerativeModel({
 const usersDB = new Datastore({ filename: "data/user.db", autoload: true });
 const mealsDB = new Datastore({ filename: "data/meal.db", autoload: true });
 
-
 /**
  * Checks whether a user is already registered in the database based on their ID
  * @param {id} The ID of the user to be checked.
@@ -161,7 +160,7 @@ app.post("/toggleFriend", async (req, res) => {
     } else {
       await usersDB.updateAsync(
         { id: userId },
-        { $push: { friends: otherUser[0].id }}
+        { $pull: { friends: otherUser[0].id }}
       );
     }
   } else { //User is not friends with other user
@@ -170,7 +169,7 @@ app.post("/toggleFriend", async (req, res) => {
     } else {
       await usersDB.updateAsync(
         { id: userId },
-        { $pull: { friends: otherUser[0].id }}
+        { $push: { friends: otherUser[0].id }}
       );
     }
   }
