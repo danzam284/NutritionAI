@@ -143,7 +143,7 @@ app.post("/toggleFriend", async (req, res) => {
   const adding = req.body.adding;
 
   const currentUser = await usersDB.findAsync({ id: userId });
-  const otherUser = await usersDB.findAsync({ username: otherUser });
+  const otherUser = await usersDB.findAsync({ username: otherUsername });
   const currentUserFriends = currentUser[0].friends;
 
   if (otherUser.length === 0) {
@@ -178,6 +178,30 @@ app.post("/toggleFriend", async (req, res) => {
   res.status(200).send("Changes Made.");
 
 });
+
+// Get ALL Users
+app.get("/getAllUser" , async( req, res ) => {
+  // Query the database to find all user documents
+  usersDB.find({}, { email: 1, _id: 0 }, (err, docs) => {
+    if (err) {
+      // Handle errors if any
+      res.status(500).send({ error: 'Database error' });
+    } else {
+      // Map the results to extract emails
+      const emails = docs.map(doc => doc.email);
+      // Send the array of emails as JSON response
+      res.json(emails);
+    }
+  });
+});
+
+
+// Get ALL Friends
+
+
+
+
+
 
 app.post("/upload", async (req, res) => {
   let cumulativeFoodData;
