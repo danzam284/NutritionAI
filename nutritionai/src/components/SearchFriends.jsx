@@ -30,9 +30,6 @@ function SearchFriends() {
         });
         console.log(response.data);
         setFilteredUsers(response.data);
-        // const results = mockUsers.filter((user) =>
-        //   user.username.toLowerCase().includes(searchTerm.toLowerCase())
-        // );
       } catch (e) {
         console.error("Error fetching search results:", error);
       }
@@ -51,6 +48,11 @@ function SearchFriends() {
         adding: true,
       });
       alert(`Friend request sent to user: ${username}`);
+
+      // Changing button to remove friend
+      setFilteredUsers((prevUsers) =>
+        prevUsers.map((user) => (user.username === username ? { ...user, isFriend: false } : user))
+      );
     } catch (e) {
       console.error("Error adding friend:", e);
     }
@@ -65,9 +67,14 @@ function SearchFriends() {
         targetUserName: username,
         adding: false,
       });
-      alert(`Friend request sent to user: ${username}`);
+      alert(`Friend removed: ${username}`);
+
+      // Changing button to add friend
+      setFilteredUsers((prevUsers) =>
+        prevUsers.map((user) => (user.username === username ? { ...user, isFriend: false } : user))
+      );
     } catch (e) {
-      console.error("Error adding friend:", e);
+      console.error("Error removing friend:", e);
     }
   };
 
@@ -92,7 +99,13 @@ function SearchFriends() {
             <div key={user.id} className="user">
               <span>{user.username}</span>
               {user.isFriend ? (
-                <button onClick={() => handleRemoveFriend(user.username)}>Remove Friend</button>
+                <button
+                  onClick={() => {
+                    handleRemoveFriend(user.username);
+                  }}
+                >
+                  Remove Friend
+                </button>
               ) : (
                 <button onClick={() => handleAddFriend(user.username)}>Add Friend</button>
               )}

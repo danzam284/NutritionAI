@@ -230,15 +230,17 @@ app.post("/searchUsers", async (req, res) => {
       username: { $regex: new RegExp(searchTerm, "i") },
     });
 
+    const currentUser = await usersDB.findAsync({ id: currentUserId });
+
     const userResults = users.map((user) => ({
       id: user.id,
       username: user.username,
-      isFriend: user.friends.includes(currentUserId),
+      isFriend: currentUser[0].friends.includes(user.id),
     }));
 
     res.json(userResults);
   } catch (e) {
-    res.status(500).send({ error: "Error finding users. " });
+    res.status(500).send({ error: "Error finding users." });
   }
 });
 
