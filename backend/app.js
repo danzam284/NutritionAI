@@ -140,17 +140,19 @@ app.post("/newUser", async (req, _) => {
 //Request takes 3 inputs: current user's id, other user's username, boolean whether adding or removing
 app.post("/toggleFriend", async (req, res) => {
   const userId = req.body.id;
-  const otherUsername = req.body.otherUsername;
+  const targetUserName = req.body.targetUserName;
   const adding = req.body.adding;
 
   const currentUser = await usersDB.findAsync({ id: userId });
-  const otherUser = await usersDB.findAsync({ username: otherUsername });
-  const currentUserFriends = currentUser[0]?.friends;
+  const otherUser = await usersDB.findAsync({ username: targetUserName });
+  const currentUserFriends = currentUser[0].friends;
 
+  // If targetUser cannot be found
   if (otherUser.length === 0) {
-    return res.status(400).send(`Could not find a user with name ${otherUsername}.`);
+    return res.status(400).send(`Could not find a user with name ${targetUserName}.`);
   }
 
+  // If currentUser is trying to friend themselves
   if (userId === otherUser[0].id) {
     return res.status(400).send("You cannot add or remove yourself as a friend.");
   }
@@ -158,7 +160,7 @@ app.post("/toggleFriend", async (req, res) => {
   //User is already friends with other user
   if (currentUserFriends.includes(otherUser[0].id)) {
     if (adding) {
-      return res.status(400).send(`You are already friends with ${otherUsername}.`);
+      return res.status(400).send(`You are already friends with ${targetUserName}.`);
     } else {
       await usersDB.updateAsync({ id: userId }, { $pull: { friends: otherUser[0].id } });
     }
@@ -168,7 +170,7 @@ app.post("/toggleFriend", async (req, res) => {
       return res
         .status(400)
         .send(
-          `You cannot remove ${otherUsername} as a friend because you are not friends with them.`
+          `You cannot remove ${targetUserName} as a friend because you are not friends with them.`
         );
     } else {
       await usersDB.updateAsync({ id: userId }, { $push: { friends: otherUser[0].id } });
@@ -215,9 +217,9 @@ app.get("/getAllFriend/:id", async (req, res) => {
   });
 });
 
-app.get("/searchUsers", async (req, res) => {
+app.post("/searchUsers", async (req, res) => {
   const searchTerm = req.query.q;
-  console.log(searchTerm);
+  const currentUserId = req.body.id;
 
   if (!searchTerm) {
     return res.status(400).send("No search term provided.");
@@ -228,12 +230,10 @@ app.get("/searchUsers", async (req, res) => {
       username: { $regex: new RegExp(searchTerm, "i") },
     });
 
-    console.log(users);
-
     const userResults = users.map((user) => ({
       id: user.id,
       username: user.username,
-      isFriend: user.friends.includes(req.userId), // Check what we pass as a userId when searchUsers
+      isFriend: user.friends.includes(currentUserId),
     }));
 
     res.json(userResults);

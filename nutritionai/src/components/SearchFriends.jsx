@@ -11,7 +11,8 @@ import axios from "axios";
 // ];
 
 function SearchFriends() {
-  const { currentUserId } = useUser();
+  const { user } = useUser();
+  const currentUserId = user.id;
 
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredUsers, setFilteredUsers] = useState([]);
@@ -24,7 +25,9 @@ function SearchFriends() {
   const handleSearch = async () => {
     if (searchTerm) {
       try {
-        const response = await axios.get(`http://localhost:3000/searchUsers?q=${searchTerm}`);
+        const response = await axios.post(`http://localhost:3000/searchUsers?q=${searchTerm}`, {
+          id: currentUserId,
+        });
         console.log(response.data);
         setFilteredUsers(response.data);
         // const results = mockUsers.filter((user) =>
@@ -39,16 +42,15 @@ function SearchFriends() {
   };
 
   // Handle adding a friend
-  const handleAddFriend = async (userId) => {
-    alert(`Friend request sent to user with ID: ${userId}`);
-    // backend call later
+  const handleAddFriend = async (username) => {
     try {
+      console.log(currentUserId);
       await axios.post("http://localhost:3000/toggleFriend", {
         id: currentUserId,
-        otherUserId: userId,
+        targetUserName: username,
         adding: true,
       });
-      alert(`Friend request sent to user with ID: ${userId}`);
+      alert(`Friend request sent to user: ${username}`);
     } catch (e) {
       console.error("Error adding friend:", e);
     }
@@ -77,7 +79,7 @@ function SearchFriends() {
               {user.isFriend ? (
                 <button disabled>Already Friends</button>
               ) : (
-                <button onClick={() => handleAddFriend(user.id)}>Add Friend</button>
+                <button onClick={() => handleAddFriend(user.username)}>Add Friend</button>
               )}
             </div>
           ))
