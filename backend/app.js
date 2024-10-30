@@ -1,8 +1,8 @@
-import express from "express";
-import cors from "cors";
-import fs from "fs";
-import dotenv from "dotenv";
 import axios from "axios";
+import cors from "cors";
+import dotenv from "dotenv";
+import express from "express";
+import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 dotenv.config();
@@ -10,8 +10,8 @@ dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-import { GoogleAIFileManager } from "@google/generative-ai/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleAIFileManager } from "@google/generative-ai/server";
 
 // DB
 import Datastore from "@seald-io/nedb";
@@ -39,13 +39,13 @@ const mealsDB = new Datastore({ filename: "data/meal.db", autoload: true });
  */
 async function userExists(id) {
   return new Promise((resolve, reject) => {
-      usersDB.findOne({ id }, (err, exists) => {
-          if (err) {
-              reject(err);
-          } else {
-              resolve(!!exists);
-          }
-      });
+    usersDB.findOne({ id }, (err, exists) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(!!exists);
+      }
+    });
   });
 }
 
@@ -54,18 +54,18 @@ async function userExists(id) {
  */
 async function createUser(id, email, username, pic) {
   const newUser = {
-      id,
-      email,
-      username,
-      notifications: [{seen: false, message: "Welcome to NutritionAI!"}],
-      friends: [],
-      profilePicture: pic,
-      score: 0
+    id,
+    email,
+    username,
+    notifications: [{ seen: false, message: "Welcome to NutritionAI!" }],
+    friends: [],
+    profilePicture: pic,
+    score: 0
   }
   usersDB.insert(newUser, (error, newDoc) => {
-      if (error) {
-          console.error(err)
-      }
+    if (error) {
+      console.error(err)
+    }
   })
 }
 
@@ -131,7 +131,7 @@ export async function nutritionFacts(text) {
 app.post("/newUser", async (req, _) => {
   const exists = await userExists(req.body.id);
   if (!exists) {
-      createUser(req.body.id, req.body.email, req.body.username, req.body.profilePicture);
+    createUser(req.body.id, req.body.email, req.body.username, req.body.profilePicture);
   }
 });
 
@@ -160,7 +160,7 @@ app.post("/toggleFriend", async (req, res) => {
     } else {
       await usersDB.updateAsync(
         { id: userId },
-        { $pull: { friends: otherUser[0].id }}
+        { $pull: { friends: otherUser[0].id } }
       );
     }
   } else { //User is not friends with other user
@@ -169,7 +169,7 @@ app.post("/toggleFriend", async (req, res) => {
     } else {
       await usersDB.updateAsync(
         { id: userId },
-        { $push: { friends: otherUser[0].id }}
+        { $push: { friends: otherUser[0].id } }
       );
     }
   }
@@ -177,6 +177,47 @@ app.post("/toggleFriend", async (req, res) => {
   res.status(200).send("Changes Made.");
 
 });
+
+// Get ALL Users
+app.get("/getAllUser", async (req, res) => {
+  // Query the database to find all user documents
+  usersDB.find({}, (err, docs) => {
+    if (err) {
+      // Handle errors if any
+      res.status(500).send({ error: 'Database error' });
+    } else {
+      // Map the results to extract emails
+      const emails = docs.map(doc => doc.email);
+      // Send the array of emails as JSON response
+      res.json(emails);
+    }
+  });
+});
+
+
+// Get Current User's ALL Friends
+app.get("/getAllFriend/:id", async (req, res) => {
+  // Extract user ID from the request parameters
+  const userId = req.params.id;
+
+  // Query the database to find the user by ID
+  usersDB.findOne({ id: userId }, (err, doc) => {
+    if (err) {
+      // Handle database errors
+      res.status(500).send({ error: 'Database error' });
+    } else if (!doc) {
+      // Handle case where user is not found
+      res.status(404).send({ error: 'User not found' });
+    } else {
+      // Send the list of friends as JSON response
+      res.json(doc.friends);
+    }
+  });
+});
+
+
+
+
 
 app.post("/upload", async (req, res) => {
   let cumulativeFoodData;
