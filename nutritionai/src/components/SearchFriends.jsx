@@ -56,6 +56,21 @@ function SearchFriends() {
     }
   };
 
+  // Handle remove a friend
+  const handleRemoveFriend = async (username) => {
+    try {
+      console.log(currentUserId);
+      await axios.post("http://localhost:3000/toggleFriend", {
+        id: currentUserId,
+        targetUserName: username,
+        adding: false,
+      });
+      alert(`Friend request sent to user: ${username}`);
+    } catch (e) {
+      console.error("Error adding friend:", e);
+    }
+  };
+
   return (
     <div className="search-friends">
       <h2>Search for Friends</h2>
@@ -77,7 +92,7 @@ function SearchFriends() {
             <div key={user.id} className="user">
               <span>{user.username}</span>
               {user.isFriend ? (
-                <button disabled>Already Friends</button>
+                <button onClick={() => handleRemoveFriend(user.username)}>Remove Friend</button>
               ) : (
                 <button onClick={() => handleAddFriend(user.username)}>Add Friend</button>
               )}
