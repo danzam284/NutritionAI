@@ -1,8 +1,8 @@
-import axios from "axios";
-import cors from "cors";
-import dotenv from "dotenv";
 import express from "express";
+import cors from "cors";
 import fs from "fs";
+import dotenv from "dotenv";
+import axios from "axios";
 import path from "path";
 import { fileURLToPath } from "url";
 dotenv.config();
@@ -10,8 +10,8 @@ dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import { GoogleAIFileManager } from "@google/generative-ai/server";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 // DB
 import Datastore from "@seald-io/nedb";
@@ -51,6 +51,10 @@ async function userExists(id) {
 
 /**
  * Adds a new user to the DB
+ * @param {id}
+ * @param {email}
+ * @param {username}
+ * @param {pic}
  */
 async function createUser(id, email, username, pic) {
   const newUser = {
@@ -60,15 +64,14 @@ async function createUser(id, email, username, pic) {
     notifications: [{ seen: false, message: "Welcome to NutritionAI!" }],
     friends: [],
     profilePicture: pic,
-    score: 0
-  }
+    score: 0,
+  };
   usersDB.insert(newUser, (error, newDoc) => {
     if (error) {
-      console.error(err)
+      console.error(err);
     }
-  })
+  });
 }
-
 
 /**
  * Sends an API call to gemini was 2 components: the image and prompt
@@ -96,7 +99,6 @@ async function sendAPIDescription(filename, mimeType) {
   const text = result.response.text();
   return text;
 }
-
 
 /**
  *
@@ -138,17 +140,19 @@ app.post("/newUser", async (req, _) => {
 //Request takes 3 inputs: current user's id, other user's username, boolean whether adding or removing
 app.post("/toggleFriend", async (req, res) => {
   const userId = req.body.id;
-  const otherUsername = req.body.otherUsername;
+  const targetUserName = req.body.targetUserName;
   const adding = req.body.adding;
 
   const currentUser = await usersDB.findAsync({ id: userId });
-  const otherUser = await usersDB.findAsync({ username: otherUsername });
+  const otherUser = await usersDB.findAsync({ username: targetUserName });
   const currentUserFriends = currentUser[0].friends;
 
+  // If targetUser cannot be found
   if (otherUser.length === 0) {
-    return res.status(400).send(`Could not find a user with name ${otherUsername}.`);
+    return res.status(400).send(`Could not find a user with name ${targetUserName}.`);
   }
 
+  // If currentUser is trying to friend themselves
   if (userId === otherUser[0].id) {
     return res.status(400).send("You cannot add or remove yourself as a friend.");
   }
@@ -156,26 +160,24 @@ app.post("/toggleFriend", async (req, res) => {
   //User is already friends with other user
   if (currentUserFriends.includes(otherUser[0].id)) {
     if (adding) {
-      return res.status(400).send(`You are already friends with ${otherUsername}.`);
+      return res.status(400).send(`You are already friends with ${targetUserName}.`);
     } else {
-      await usersDB.updateAsync(
-        { id: userId },
-        { $pull: { friends: otherUser[0].id } }
-      );
+      await usersDB.updateAsync({ id: userId }, { $pull: { friends: otherUser[0].id } });
     }
-  } else { //User is not friends with other user
+  } else {
+    //User is not friends with other user
     if (!adding) {
-      return res.status(400).send(`You cannot remove ${otherUsername} as a friend because you are not friends with them.`);
+      return res
+        .status(400)
+        .send(
+          `You cannot remove ${targetUserName} as a friend because you are not friends with them.`
+        );
     } else {
-      await usersDB.updateAsync(
-        { id: userId },
-        { $push: { friends: otherUser[0].id } }
-      );
+      await usersDB.updateAsync({ id: userId }, { $push: { friends: otherUser[0].id } });
     }
   }
 
   res.status(200).send("Changes Made.");
-
 });
 
 // Get ALL Users
@@ -184,16 +186,15 @@ app.get("/getAllUser", async (req, res) => {
   usersDB.find({}, (err, docs) => {
     if (err) {
       // Handle errors if any
-      res.status(500).send({ error: 'Database error' });
+      res.status(500).send({ error: "Database error" });
     } else {
       // Map the results to extract emails
-      const emails = docs.map(doc => doc.email);
+      const emails = docs.map((doc) => doc.email);
       // Send the array of emails as JSON response
       res.json(emails);
     }
   });
 });
-
 
 // Get Current User's ALL Friends
 app.get("/getAllFriend/:id", async (req, res) => {
@@ -204,20 +205,42 @@ app.get("/getAllFriend/:id", async (req, res) => {
   usersDB.findOne({ id: userId }, (err, doc) => {
     if (err) {
       // Handle database errors
-      res.status(500).send({ error: 'Database error' });
+      res.status(500).send({ error: "Database error" });
     } else if (!doc) {
       // Handle case where user is not found
-      res.status(404).send({ error: 'User not found' });
+      res.status(404).send({ error: "User not found" });
     } else {
       // Send the list of friends as JSON response
+      console.log(doc);
       res.json(doc.friends);
     }
   });
 });
 
+app.post("/searchUsers", async (req, res) => {
+  const searchTerm = req.query.q;
+  const currentUserId = req.body.id;
 
+  if (!searchTerm) {
+    return res.status(400).send("No search term provided.");
+  }
 
+  try {
+    const users = await usersDB.findAsync({
+      username: { $regex: new RegExp(searchTerm, "i") },
+    });
 
+    const userResults = users.map((user) => ({
+      id: user.id,
+      username: user.username,
+      isFriend: user.friends.includes(currentUserId),
+    }));
+
+    res.json(userResults);
+  } catch (e) {
+    res.status(500).send({ error: "Error finding users. " });
+  }
+});
 
 app.post("/upload", async (req, res) => {
   let cumulativeFoodData;
@@ -259,10 +282,10 @@ app.post("/upload", async (req, res) => {
             carbohydrates: fooddata.foodNutrients[2]?.value,
             protein: fooddata.foodNutrients[0]?.value,
             sodium: fooddata.foodNutrients[8]?.value,
-            sugar: fooddata.foodNutrients[4]?.value
-          }
+            sugar: fooddata.foodNutrients[4]?.value,
+          };
         } else {
-          cumulativeFoodData["food"] += ", " + fooddata.description
+          cumulativeFoodData["food"] += ", " + fooddata.description;
           cumulativeFoodData["calories"] += fooddata.foodNutrients[3]?.value ?? 0;
           cumulativeFoodData["fat"] += fooddata.foodNutrients[1]?.value ?? 0;
           cumulativeFoodData["carbohydrates"] += fooddata.foodNutrients[2]?.value ?? 0;
@@ -273,7 +296,6 @@ app.post("/upload", async (req, res) => {
       }
     }
 
-
     // Clean up file after processing
     if (fs.existsSync(filepath)) {
       console.log("here");
@@ -281,7 +303,6 @@ app.post("/upload", async (req, res) => {
     } else {
       console.log("Error: File not saved.");
     }
-
   } catch (e) {
     console.log(e);
     error.push(e);
