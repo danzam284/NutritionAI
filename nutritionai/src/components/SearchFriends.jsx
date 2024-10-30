@@ -1,15 +1,18 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { useUser } from "@clerk/clerk-react";
+import axios from "axios";
 
-// Mock data (use until backend functions are established)
-const mockUsers = [
-  { id: 1, name: "Alice", isFriend: false },
-  { id: 2, name: "Bob", isFriend: true },
-  { id: 3, name: "Charlie", isFriend: false },
-  { id: 4, name: "David", isFriend: true },
-];
+// const mockUsers = [
+//   { id: 1, name: "Alice", isFriend: false },
+//   { id: 2, name: "Bob", isFriend: true },
+//   { id: 3, name: "Charlie", isFriend: false },
+//   { id: 4, name: "David", isFriend: true },
+// ];
 
 function SearchFriends() {
+  const { currentUserId } = useUser();
+
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredUsers, setFilteredUsers] = useState([]);
 
@@ -18,21 +21,37 @@ function SearchFriends() {
   };
 
   // Mock users search from a backend
-  useEffect(() => {
+  const handleSearch = async () => {
     if (searchTerm) {
-      const results = mockUsers.filter((user) =>
-        user.name.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-      setFilteredUsers(results);
+      try {
+        const response = await axios.get(`http://localhost:3000/searchUsers?q=${searchTerm}`);
+        console.log(response.data);
+        setFilteredUsers(response.data);
+        // const results = mockUsers.filter((user) =>
+        //   user.username.toLowerCase().includes(searchTerm.toLowerCase())
+        // );
+      } catch (e) {
+        console.error("Error fetching search results:", error);
+      }
     } else {
       setFilteredUsers([]);
     }
-  }, [searchTerm]);
+  };
 
   // Handle adding a friend
-  const handleAddFriend = (userId) => {
+  const handleAddFriend = async (userId) => {
     alert(`Friend request sent to user with ID: ${userId}`);
     // backend call later
+    try {
+      await axios.post("http://localhost:3000/toggleFriend", {
+        id: currentUserId,
+        otherUserId: userId,
+        adding: true,
+      });
+      alert(`Friend request sent to user with ID: ${userId}`);
+    } catch (e) {
+      console.error("Error adding friend:", e);
+    }
   };
 
   return (
@@ -49,11 +68,12 @@ function SearchFriends() {
         value={searchTerm}
         onChange={handleSearchChange}
       />
+      <button onClick={handleSearch}>Search</button>
       <div className="results">
-        {filteredUsers.length > 0 ? (
+        {filteredUsers && Array.isArray(filteredUsers) && filteredUsers.length > 0 ? (
           filteredUsers.map((user) => (
             <div key={user.id} className="user">
-              <span>{user.name}</span>
+              <span>{user.username}</span>
               {user.isFriend ? (
                 <button disabled>Already Friends</button>
               ) : (
