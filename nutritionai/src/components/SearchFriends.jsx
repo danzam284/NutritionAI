@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 
 // Mock data (use until backend functions are established)
 const mockUsers = [
@@ -37,6 +38,11 @@ function SearchFriends() {
   return (
     <div className="search-friends">
       <h2>Search for Friends</h2>
+      <div id="nav">
+        <Link to="/">Home</Link>
+        <Link to="/upload">Upload</Link>
+        <Link to="/savedmeal">Saved Meals</Link>
+      </div>
       <input
         type="text"
         placeholder="Search by name..."
