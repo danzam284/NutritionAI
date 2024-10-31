@@ -7,6 +7,7 @@ import Home from "./components/Home.jsx";
 import SavedMeal from "./components/SavedMeal.jsx";
 import SignedOutPage from "./components/SignedOutPage.jsx";
 import SearchFriends from "./components/SearchFriends.jsx";
+import FriendsMeals from "./components/FriendsMeals.jsx"; // Import the new FriendsMeals component
 
 function App() {
   return (
@@ -24,6 +25,7 @@ function App() {
           <Route path="/upload" element={<Upload />} />
           <Route path="/savedmeal" element={<SavedMeal />} />
           <Route path="/add-friends" element={<SearchFriends />} />
+          <Route path="/friends-meals" element={<FriendsMeals />} /> 
         </Routes>
       </SignedIn>
     </div>
