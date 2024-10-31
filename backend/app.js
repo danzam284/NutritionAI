@@ -321,7 +321,6 @@ app.post("/upload", async (req, res) => {
 
     // Clean up file after processing
     if (fs.existsSync(filepath)) {
-      console.log("here");
       fs.unlinkSync(filepath); // Only delete if the file exists
     } else {
       console.log("Error: File not saved.");
@@ -334,6 +333,7 @@ app.post("/upload", async (req, res) => {
   // DB Action
   try {
     try {
+      console.log(cumulativeFoodData);
       await addMealForUser(cumulativeFoodData);
       // newDoc is the newly inserted document, including its _id
       // newDoc has no key called notToBeSaved since its value was undefined
@@ -353,12 +353,12 @@ app.post("/upload", async (req, res) => {
 });
 
 async function getMealsByUser(id) {
-  console.log(await mealsDB.findAsync({ poster: id }));
   return await mealsDB.findAsync({ poster: id });
 }
 
 app.get("/savedmeal/:id", async (req, res) => {
   const userId = req.params.id;
+  console.log(userId);
   const doc = await getMealsByUser(userId);
   res.json(doc);
 });
