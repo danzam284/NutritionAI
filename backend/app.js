@@ -207,6 +207,32 @@ app.get("/getAllUser", async (_, res) => {
   }
 });
 
+app.get("/friends-meals/:friendId", async (req, res) => {
+  const friendId = req.params.friendId;
+
+  try {
+    const meals = await getMealsByUser(friendId); // Use the existing function to fetch meals
+    res.json(meals);
+  } catch (error) {
+    console.error("Error fetching friend's meals:", error);
+    res.status(500).send("Error fetching friend's meals");
+  }
+});
+
+app.get("/user/:id", async (req, res) => {
+  const userId = req.params.id;
+  usersDB.findOne({ id: userId }, (err, doc) => {
+    if (err) {
+      return res.status(500).send({ error: "Database error" });
+    } else if (!doc) {
+      return res.status(404).send({ error: "User not found" });
+    } else {
+      res.json(doc); // Return the user document which contains username and other details
+    }
+  });
+});
+
+
 
 // Get Current User's ALL Friends
 app.get("/getAllFriend/:id", async (req, res) => {
