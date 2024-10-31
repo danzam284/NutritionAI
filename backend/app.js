@@ -66,10 +66,15 @@ async function createUser(id, email, username, pic) {
     profilePicture: pic,
     score: 0,
   };
-  usersDB.insert(newUser, (error, newDoc) => {
-    if (error) {
-      console.error(err);
-    }
+  return new Promise((resolve, reject) => {
+    usersDB.insert(newUser, (error, newDoc) => {
+      if (error) {
+        console.error(error);
+        reject(error);
+      } else {
+        resolve(newDoc);
+      }
+    });
   });
 }
 
@@ -105,7 +110,7 @@ async function sendAPIDescription(filename, mimeType) {
  * @param {string} text The food item that Gemini AI determined
  * @returns object from FDC API of food nutrients
  */
-export async function nutritionFacts(text) {
+async function nutritionFacts(text) {
   try {
     const base_url = "https://api.nal.usda.gov/fdc/v1/foods/search";
     const api_key = `?api_key=${process.env.USDA_KEY}`;
@@ -180,21 +185,28 @@ app.post("/toggleFriend", async (req, res) => {
   res.status(200).send("Changes Made.");
 });
 
-// Get ALL Users
-app.get("/getAllUser", async (req, res) => {
-  // Query the database to find all user documents
-  usersDB.find({}, (err, docs) => {
-    if (err) {
-      // Handle errors if any
-      res.status(500).send({ error: "Database error" });
-    } else {
-      // Map the results to extract emails
-      const emails = docs.map((doc) => doc.email);
-      // Send the array of emails as JSON response
-      res.json(emails);
-    }
+async function getAllUsers() {
+  return new Promise((resolve, reject) => {
+    usersDB.find({}, (err, docs) => {
+      if (err) {
+        reject("Database error");
+      } else {
+        const emails = docs.map((doc) => doc.email);
+        resolve(emails);
+      }
+    });
   });
+}
+
+app.get("/getAllUser", async (_, res) => {
+  try {
+    const emails = await getAllUsers();
+    res.json(emails);
+  } catch (error) {
+    res.status(500).send({ error });
+  }
 });
+
 
 // Get Current User's ALL Friends
 app.get("/getAllFriend/:id", async (req, res) => {
@@ -217,6 +229,22 @@ app.get("/getAllFriend/:id", async (req, res) => {
   });
 });
 
+async function searchUsers(searchTerm, ID) {
+  const users = await usersDB.findAsync({
+    username: { $regex: new RegExp(searchTerm, "i") },
+  });
+
+  const currentUser = await usersDB.findAsync({ id: ID });
+
+  const userResults = users.map((user) => ({
+    id: user.id,
+    username: user.username,
+    isFriend: currentUser[0].friends.includes(user.id),
+  }));
+
+  return userResults
+}
+
 app.post("/searchUsers", async (req, res) => {
   const searchTerm = req.query.q;
   const currentUserId = req.body.id;
@@ -226,23 +254,16 @@ app.post("/searchUsers", async (req, res) => {
   }
 
   try {
-    const users = await usersDB.findAsync({
-      username: { $regex: new RegExp(searchTerm, "i") },
-    });
-
-    const currentUser = await usersDB.findAsync({ id: currentUserId });
-
-    const userResults = users.map((user) => ({
-      id: user.id,
-      username: user.username,
-      isFriend: currentUser[0].friends.includes(user.id),
-    }));
-
+    const userResults = await searchUsers(searchTerm, currentUserId);
     res.json(userResults);
   } catch (e) {
     res.status(500).send({ error: "Error finding users." });
   }
 });
+
+async function addMealForUser(cumulativeFoodData) {
+  await mealsDB.insertAsync(cumulativeFoodData);
+}
 
 app.post("/upload", async (req, res) => {
   let cumulativeFoodData;
@@ -313,7 +334,7 @@ app.post("/upload", async (req, res) => {
   // DB Action
   try {
     try {
-      await mealsDB.insertAsync(cumulativeFoodData);
+      await addMealForUser(cumulativeFoodData);
       // newDoc is the newly inserted document, including its _id
       // newDoc has no key called notToBeSaved since its value was undefined
     } catch (e) {
@@ -331,12 +352,31 @@ app.post("/upload", async (req, res) => {
   }
 });
 
+async function getMealsByUser(id) {
+  console.log(await mealsDB.findAsync({ poster: id }));
+  return await mealsDB.findAsync({ poster: id });
+}
+
 app.get("/savedmeal/:id", async (req, res) => {
   const userId = req.params.id;
-  let doc = await mealsDB.findAsync({ poster: userId });
+  const doc = await getMealsByUser(userId);
   res.json(doc);
 });
 
 app.listen(3000, () => {
   console.log(`NutritionAI listening at http://localhost:3000`);
 });
+
+
+export {
+  nutritionFacts,
+  createUser,
+  usersDB,
+  userExists,
+  sendAPIDescription,
+  getAllUsers,
+  getMealsByUser,
+  addMealForUser,
+  mealsDB,
+  searchUsers
+}
