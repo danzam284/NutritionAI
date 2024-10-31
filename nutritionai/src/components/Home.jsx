@@ -26,6 +26,7 @@ function Home() {
         <Link to="/upload">Upload</Link>
         <Link to="/savedmeal">Saved Meals</Link>
         <Link to="/add-friends">Add Friends</Link>
+        <Link to="/friends-meals">View Friends Meals</Link>
       </div>
     </div>
   );
