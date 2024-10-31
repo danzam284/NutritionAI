@@ -1,11 +1,6 @@
 import { nutritionFacts, createUser, usersDB, userExists, sendAPIDescription, getAllUsers, getMealsByUser, addMealForUser, mealsDB, searchUsers } from './app.js';
 
 describe("Test Nutrition API Call", () => {
-  // Return a valid token
-  test("should return valid data for chicken", async () => {
-    const result = await nutritionFacts("chicken");
-    expect(result).toBeDefined();
-  });
   test("Should throw Nutrition API because API key is not in github", async () => {
     await expect(nutritionFacts("chicken")).rejects.toThrow();
   });
