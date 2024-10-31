@@ -36,7 +36,7 @@ function Upload() {
   return (
     <>
       <div>
-        <h1>Upload Image Page`</h1>
+        <h1>Upload Image Page</h1>
         <Link to="/">Home</Link>
         <input type="file" accept="image/*" onInput={(e) => sendFile(e)}></input>
         {isSubmitted && (

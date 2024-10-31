@@ -1,10 +1,8 @@
 import { nutritionFacts, createUser, usersDB, userExists, sendAPIDescription, getAllUsers, getMealsByUser, addMealForUser, mealsDB, searchUsers } from './app.js';
 
 describe("Test Nutrition API Call", () => {
-  // Return a valid token
-  test("should return valid data for chicken", async () => {
-    const result = await nutritionFacts("chicken");
-    expect(result).toBeDefined();
+  test("Should throw Nutrition API because API key is not in github", async () => {
+    await expect(nutritionFacts("chicken")).rejects.toThrow();
   });
 });
 
@@ -18,7 +16,14 @@ describe("Test Database User Functions", () => {
     expect(addedUser.id).toBe(1);
   });
 
-  test("Test userExists function", async () => {
+  test("Test userExists with an existing user", async () => {
+    await createUser(1, "fake@gmail.com", "fakeUser", "pic");
+    const exists = await userExists(1);
+    expect(exists).toBe(true);
+    await usersDB.removeAsync({ id: 1 }, { multi: true });
+  });
+
+  test("Test userExists with non-existing user function", async () => {
 
     //Removes all previously added users with an ID of 1
     await usersDB.removeAsync({ id: 1 }, { multi: true });
@@ -57,10 +62,8 @@ describe("Test Database User Functions", () => {
 });
 
 describe("Test Gemini API Call", () => {
-  // Return a valid token
-  test("Should return API data", async () => {
-    const APITest = await sendAPIDescription("dontRemove.png", "image/png");
-    expect(APITest).toBeDefined();
+  test("Should throw Gemini because API key is not in github", async () => {
+    await expect(sendAPIDescription("dontRemove.png", "image/png")).rejects.toThrow();
   });
 
 });
