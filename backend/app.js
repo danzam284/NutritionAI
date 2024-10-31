@@ -1,6 +1,6 @@
 import express from "express";
 import cors from "cors";
-import fs from "fs";
+import fs from 'node:fs';
 import dotenv from "dotenv";
 import axios from "axios";
 import path from "path";
@@ -249,7 +249,6 @@ app.get("/getAllFriend/:id", async (req, res) => {
       res.status(404).send({ error: "User not found" });
     } else {
       // Send the list of friends as JSON response
-      console.log(doc);
       res.json(doc.friends);
     }
   });
@@ -262,11 +261,13 @@ async function searchUsers(searchTerm, ID) {
 
   const currentUser = await usersDB.findAsync({ id: ID });
 
-  const userResults = users.map((user) => ({
-    id: user.id,
-    username: user.username,
-    isFriend: currentUser[0].friends.includes(user.id),
-  }));
+  const userResults = users
+    .filter((user) => user.id !== ID)
+    .map((user) => ({
+      id: user.id,
+      username: user.username,
+      isFriend: currentUser[0].friends.includes(user.id),
+    }));
 
   return userResults
 }
@@ -359,7 +360,6 @@ app.post("/upload", async (req, res) => {
   // DB Action
   try {
     try {
-      console.log(cumulativeFoodData);
       await addMealForUser(cumulativeFoodData);
       // newDoc is the newly inserted document, including its _id
       // newDoc has no key called notToBeSaved since its value was undefined
@@ -384,7 +384,6 @@ async function getMealsByUser(id) {
 
 app.get("/savedmeal/:id", async (req, res) => {
   const userId = req.params.id;
-  console.log(userId);
   const doc = await getMealsByUser(userId);
   res.json(doc);
 });
@@ -392,7 +391,6 @@ app.get("/savedmeal/:id", async (req, res) => {
 app.listen(3000, () => {
   console.log(`NutritionAI listening at http://localhost:3000`);
 });
-
 
 export {
   nutritionFacts,

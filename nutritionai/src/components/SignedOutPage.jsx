@@ -4,7 +4,7 @@ function SignedOutPage(props) {
 
     return (
         <div>
-            <h1>DrawAIng</h1>
+            <h1>Nutrition AI</h1>
             <p>Please create an account or sign in!</p>
             <SignInButton mode="modal">
                 <button>Sign In</button>

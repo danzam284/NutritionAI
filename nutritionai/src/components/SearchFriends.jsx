@@ -41,17 +41,15 @@ function SearchFriends() {
   // Handle adding a friend
   const handleAddFriend = async (username) => {
     try {
-      console.log(currentUserId);
       await axios.post("http://localhost:3000/toggleFriend", {
         id: currentUserId,
         targetUserName: username,
         adding: true,
       });
-      alert(`Friend request sent to user: ${username}`);
 
       // Changing button to remove friend
       setFilteredUsers((prevUsers) =>
-        prevUsers.map((user) => (user.username === username ? { ...user, isFriend: false } : user))
+        prevUsers.map((user) => (user.username === username ? { ...user, isFriend: true } : user))
       );
     } catch (e) {
       console.error("Error adding friend:", e);
@@ -67,7 +65,6 @@ function SearchFriends() {
         targetUserName: username,
         adding: false,
       });
-      alert(`Friend removed: ${username}`);
 
       // Changing button to add friend
       setFilteredUsers((prevUsers) =>
