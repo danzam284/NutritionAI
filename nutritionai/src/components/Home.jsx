@@ -24,7 +24,7 @@ function Home() {
       <h1>NutritionAI Homepage</h1>
       <div id="nav">
         <Link to="/upload">Upload</Link>
-        <Link to="/savedmeal">Saved Meals</Link>
+        <Link to="/profile">Profile</Link>
         <Link to="/add-friends">Add Friends</Link>
         <Link to="/friends-meals">View Friends Meals</Link>
       </div>
