@@ -7,7 +7,7 @@ As far as our technical plan for this project, we want to build an express appli
 - Armaan Khatri
 - Branden Bulatao
 - Daniel Zamloot
-- Mohamaad Aziz
+- Mohammed Aziz
 - Johnson Lee
 ## Running the Application
 - cd into backend and run 'npm i'
