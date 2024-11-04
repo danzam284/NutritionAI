@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import axios from "axios";
 import "../App.css";
 import { useUser } from '@clerk/clerk-react';
+import Meal from "./Meal";
 
 function Upload() {
   const [response, setResponse] = useState();
@@ -39,25 +40,23 @@ function Upload() {
         <h1>Upload Image Page</h1>
         <Link to="/">Home</Link>
         <input type="file" accept="image/*" onInput={(e) => sendFile(e)}></input>
-        {isSubmitted && (
+        {isSubmitted && !response && (
           <div>
             <img src={image} alt="Image" width="500" />
           </div>
         )}
         {response && (
-          <div>
-            <p>{response["geminiFoodDescription"] || ""}</p>
-          </div>
-        )}
-        {response && (
-          <div>
-            <p>Item: {response["food"] || "N/A"}</p>
-            <p>Calories: {response["calories"] || "N/A"}</p>
-            <p>Fat: {response["fat"] || "N/A"}</p>
-            <p>Protein: {response["protein"] || "N/A"}</p>
-            <p>Carbohydrates: {response["carbohydrates"] || "N/A"}</p>
-            <p>Sodium: {response["sodium"] || "N/A"}</p>
-          </div>
+          <Meal
+            calories={response["calories"]}
+            fat={response["fat"]}
+            protein={response["protein"]}
+            carbs={response["carbohydrates"]}
+            sodium={response["sodium"]}
+            sugar={response["sugar"]}
+            image={response["base64Image"]}
+            food={response["food"]}
+            index={0}
+          />
         )}
       </div>
     </>

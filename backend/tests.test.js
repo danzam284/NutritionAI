@@ -1,8 +1,13 @@
-import { nutritionFacts, createUser, usersDB, userExists, sendAPIDescription, getAllUsers, getMealsByUser, addMealForUser, mealsDB, searchUsers } from './app.js';
+import { nutritionFacts, createUser, usersDB, userExists, sendAPIDescription, getAllUsers, getMealsByUser, addMealForUser, mealsDB, searchUsers, updateGoals } from './app.js';
 
 describe("Test Nutrition API Call", () => {
-  test("Should throw Nutrition API because API key is not in github", async () => {
-    await expect(nutritionFacts("chicken")).rejects.toThrow();
+  test("Should throw if in github but pass locally", async () => {
+    if (process.env.USDA_KEY) {
+      const chickenInfo = await nutritionFacts("chicken");
+      await expect(chickenInfo).toBeDefined();
+    } else {
+      await expect(nutritionFacts("chicken")).rejects.toThrow();
+    }
   });
 });
 
@@ -58,14 +63,57 @@ describe("Test Database User Functions", () => {
     await usersDB.removeAsync({ id: 2 }, { multi: true });
   });
 
-  
+  test("Test updateGoals function no parameters included except ID", async () => {
+    //Creates a fake user
+    await createUser(1, "fake@gmail.com", "fakeUser", "pic");
+    //Updates the user with empty goals so that it uses the default goal values
+    await updateGoals(1, {});
+
+    //Finds the correct user and ensures the protein is 50 (default value)
+    const users = await getAllUsers();
+    for (let i = 0; i < users.length; i++) {
+      if (users[i].id === 1) {
+        expect(users[i].protein).toBe(50);
+      }
+    }
+
+    //cleans up
+    await usersDB.removeAsync({ id: 1 }, { multi: true });
+  });
+
+  test("Test updateGoals function with all parameters included", async () => {
+    //Creates a fake user
+    await createUser(1, "fake@gmail.com", "fakeUser", "pic");
+
+    const nutritionGoals = {
+      cal: 1, calt: 1, pro: 1, prot: 1, car: 1, cart: 1, fat: 1, fatt: 1
+    }
+
+    //Updates the user with all goals set to 1
+    await updateGoals(1, nutritionGoals);
+
+    //Finds the correct user and ensures the fat threshold is 50 (default value)
+    const users = await getAllUsers();
+    for (let i = 0; i < users.length; i++) {
+      if (users[i].id === 1) {
+        expect(users[i].fatt).toBe(1);
+      }
+    }
+
+    //cleans up
+    await usersDB.removeAsync({ id: 1 }, { multi: true });
+  });
 });
 
 describe("Test Gemini API Call", () => {
-  test("Should throw Gemini because API key is not in github", async () => {
-    await expect(sendAPIDescription("dontRemove.png", "image/png")).rejects.toThrow();
+  test("Should throw if in github but pass locally", async () => {
+    if (process.env.API_KEY) {
+      const geminiResponse = await sendAPIDescription("dontRemove.png", "image/png");
+      await expect(geminiResponse).toBeDefined();
+    } else {
+      await expect(sendAPIDescription("dontRemove.png", "image/png")).rejects.toThrow();
+    }
   });
-
 });
 
 describe("Test Database Meal Functions", () => {

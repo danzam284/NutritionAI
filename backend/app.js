@@ -1,6 +1,6 @@
 import express from "express";
 import cors from "cors";
-import fs from 'node:fs';
+import fs from "node:fs";
 import dotenv from "dotenv";
 import axios from "axios";
 import path from "path";
@@ -65,6 +65,14 @@ async function createUser(id, email, username, pic) {
     friends: [],
     profilePicture: pic,
     score: 0,
+    protein: null,
+    carbohydrates: null,
+    calories: null,
+    fat: null,
+    proteinThreshold: null,
+    carbohydrateThreshold: null,
+    fatThreshold: null,
+    caloriesThreshold: null,
   };
   return new Promise((resolve, reject) => {
     usersDB.insert(newUser, (error, newDoc) => {
@@ -135,10 +143,15 @@ async function nutritionFacts(text) {
   }
 }
 
-app.post("/newUser", async (req, _) => {
+app.post("/newUser", async (req) => {
   const exists = await userExists(req.body.id);
   if (!exists) {
-    createUser(req.body.id, req.body.email, req.body.username, req.body.profilePicture);
+    createUser(
+      req.body.id,
+      req.body.email,
+      req.body.username,
+      req.body.profilePicture,
+    );
   }
 });
 
@@ -154,20 +167,29 @@ app.post("/toggleFriend", async (req, res) => {
 
   // If targetUser cannot be found
   if (otherUser.length === 0) {
-    return res.status(400).send(`Could not find a user with name ${targetUserName}.`);
+    return res
+      .status(400)
+      .send(`Could not find a user with name ${targetUserName}.`);
   }
 
   // If currentUser is trying to friend themselves
   if (userId === otherUser[0].id) {
-    return res.status(400).send("You cannot add or remove yourself as a friend.");
+    return res
+      .status(400)
+      .send("You cannot add or remove yourself as a friend.");
   }
 
   //User is already friends with other user
   if (currentUserFriends.includes(otherUser[0].id)) {
     if (adding) {
-      return res.status(400).send(`You are already friends with ${targetUserName}.`);
+      return res
+        .status(400)
+        .send(`You are already friends with ${targetUserName}.`);
     } else {
-      await usersDB.updateAsync({ id: userId }, { $pull: { friends: otherUser[0].id } });
+      await usersDB.updateAsync(
+        { id: userId },
+        { $pull: { friends: otherUser[0].id } },
+      );
     }
   } else {
     //User is not friends with other user
@@ -175,10 +197,13 @@ app.post("/toggleFriend", async (req, res) => {
       return res
         .status(400)
         .send(
-          `You cannot remove ${targetUserName} as a friend because you are not friends with them.`
+          `You cannot remove ${targetUserName} as a friend because you are not friends with them.`,
         );
     } else {
-      await usersDB.updateAsync({ id: userId }, { $push: { friends: otherUser[0].id } });
+      await usersDB.updateAsync(
+        { id: userId },
+        { $push: { friends: otherUser[0].id } },
+      );
     }
   }
 
@@ -232,8 +257,6 @@ app.get("/user/:id", async (req, res) => {
   });
 });
 
-
-
 // Get Current User's ALL Friends
 app.get("/getAllFriend/:id", async (req, res) => {
   // Extract user ID from the request parameters
@@ -269,7 +292,7 @@ async function searchUsers(searchTerm, ID) {
       isFriend: currentUser[0].friends.includes(user.id),
     }));
 
-  return userResults
+  return userResults;
 }
 
 app.post("/searchUsers", async (req, res) => {
@@ -283,7 +306,7 @@ app.post("/searchUsers", async (req, res) => {
   try {
     const userResults = await searchUsers(searchTerm, currentUserId);
     res.json(userResults);
-  } catch (e) {
+  } catch {
     res.status(500).send({ error: "Error finding users." });
   }
 });
@@ -336,10 +359,13 @@ app.post("/upload", async (req, res) => {
           };
         } else {
           cumulativeFoodData["food"] += ", " + fooddata.description;
-          cumulativeFoodData["calories"] += fooddata.foodNutrients[3]?.value ?? 0;
+          cumulativeFoodData["calories"] +=
+            fooddata.foodNutrients[3]?.value ?? 0;
           cumulativeFoodData["fat"] += fooddata.foodNutrients[1]?.value ?? 0;
-          cumulativeFoodData["carbohydrates"] += fooddata.foodNutrients[2]?.value ?? 0;
-          cumulativeFoodData["protein"] += fooddata.foodNutrients[0]?.value ?? 0;
+          cumulativeFoodData["carbohydrates"] +=
+            fooddata.foodNutrients[2]?.value ?? 0;
+          cumulativeFoodData["protein"] +=
+            fooddata.foodNutrients[0]?.value ?? 0;
           cumulativeFoodData["sodium"] += fooddata.foodNutrients[8]?.value ?? 0;
           cumulativeFoodData["sugar"] += fooddata.foodNutrients[4]?.value ?? 0;
         }
@@ -382,6 +408,39 @@ async function getMealsByUser(id) {
   return await mealsDB.findAsync({ poster: id });
 }
 
+/**
+ * Edits the user DB to set the goals of that user
+ * Uses default values if a specific value is not supplied by the user
+ * @param {userId} The ID of the user whose goals are to be updated
+ * @param {macronutrients} The body of the calling POST request which contains the values for each macronutrient goal
+ */
+async function updateGoals(userId, macronutrients) {
+  await usersDB.updateAsync(
+    { id: userId },
+    {
+      $set: {
+        calories: macronutrients.cal ?? 2000,
+        caloriesThreshold: macronutrients.calt ?? 400,
+        protein: macronutrients.pro ?? 50,
+        proteinThreshold: macronutrients.prot ?? 10,
+        carbohydrates: macronutrients.car ?? 250,
+        carbohydrateThreshold: macronutrients.cart ?? 50,
+        fat: macronutrients.fat ?? 60,
+        fatThreshold: macronutrients.fatt ?? 20,
+      },
+    },
+  );
+}
+
+app.post("/updateGoals", async (req, res) => {
+  try {
+    await updateGoals(req.body.id, req.body);
+    res.status(200).send();
+  } catch (e) {
+    res.status(400).send(e);
+  }
+});
+
 app.get("/savedmeal/:id", async (req, res) => {
   const userId = req.params.id;
   const doc = await getMealsByUser(userId);
@@ -402,5 +461,6 @@ export {
   getMealsByUser,
   addMealForUser,
   mealsDB,
-  searchUsers
-}
+  searchUsers,
+  updateGoals,
+};

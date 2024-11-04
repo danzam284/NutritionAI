@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useUser } from "@clerk/clerk-react";
 import { Link } from "react-router-dom";
+import Meal from "./Meal";
 
 const FriendsMeals = () => {
   const { user } = useUser();
@@ -54,20 +55,17 @@ const FriendsMeals = () => {
       <div>
         {meals.length > 0 ? (
           meals.map((meal, index) => (
-            <div key={index} style={{ margin: '10px', textAlign: 'center' }}>
-              <img
-                src={`data:image/png;base64,${meal.base64Image}`}
-                alt={`Meal ${index}`}
-                style={{ width: '100px', height: 'auto' }} // Smaller image size
-              />
-              <p style={{ fontSize: '0.8em' }}>{meal.food}</p>
-              <p style={{ fontSize: '0.8em' }}>Calories: {meal.calories}</p>
-              <p style={{ fontSize: '0.8em' }}>Fat: {meal.fat}g</p>
-              <p style={{ fontSize: '0.8em' }}>Protein: {meal.protein}g</p>
-              <p style={{ fontSize: '0.8em' }}>Carbohydrates: {meal.carbohydrates}g</p>
-              <p style={{ fontSize: '0.8em' }}>Sodium: {meal.sodium}mg</p>
-              <p style={{ fontSize: '0.8em' }}>Sugar: {meal.sugar}g</p>
-            </div>
+            <Meal
+              calories={meal["calories"]}
+              fat={meal["fat"]}
+              protein={meal["protein"]}
+              carbs={meal["carbohydrates"]}
+              sodium={meal["sodium"]}
+              sugar={meal["sugar"]}
+              image={meal["base64Image"]}
+              food={meal["food"]}
+              index={index}
+            />
           ))
         ) : (
           <p>No meals found.</p>
