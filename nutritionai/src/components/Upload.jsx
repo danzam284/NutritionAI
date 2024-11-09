@@ -20,7 +20,7 @@ function Upload() {
    */
   async function processImage(e) {
     const uploadedFile = e.target.files[0];
-    processImage(uploadedFile);
+    sendFile(uploadedFile);
   }
 
   // Process and send image to backend
