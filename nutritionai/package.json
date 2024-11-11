@@ -12,6 +12,8 @@
   "dependencies": {
     "@clerk/clerk-react": "^5.12.0",
     "@emotion/styled": "^11.13.0",
+    "@mantine/core": "^7.13.5",
+    "@mantine/dates": "^7.13.5",
     "@mui/material": "^6.1.6",
     "antd": "^5.21.6",
     "axios": "^1.7.7",
