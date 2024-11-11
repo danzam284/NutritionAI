@@ -349,6 +349,7 @@ app.post("/upload", async (req, res) => {
             base64Image: base64Image,
             poster: posterId,
             food: fooddata.description,
+            timestamp: new Date().getTime(),
             likes: [],
             calories: fooddata.foodNutrients[3]?.value,
             fat: fooddata.foodNutrients[1]?.value,
@@ -449,6 +450,20 @@ app.get("/savedmeal/:id", async (req, res) => {
 
 app.listen(3000, () => {
   console.log(`NutritionAI listening at http://localhost:3000`);
+});
+
+await mealsDB.insertAsync({
+  base64Image: "",
+  poster: "user_2nczcBk4ubJUfVski6kfcoFAMVW",
+  food: "Manually Entered2",
+  timestamp: new Date().getTime(),
+  likes: [],
+  calories: 2700,
+  fat: 60,
+  carbohydrates: 300,
+  protein: 120,
+  sodium: 300,
+  sugar: 20,
 });
 
 export {
