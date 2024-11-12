@@ -21,6 +21,9 @@ function Meal(props) {
                 <p>Sodium: {sodium.toFixed(1) + " mg" || "N/A"}</p>
                 <p>Sugar: {sugar.toFixed(1) + " g" || "N/A"}</p>
             </div>
+            <div>
+                <p>Score: {score}</p>
+            </div>
             <div>Feedback
                 <p>1.{feedback[0]}</p>
                 <p>2.{feedback[1]}</p>
