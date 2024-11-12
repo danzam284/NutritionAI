@@ -1,6 +1,6 @@
 function Meal(props) {
 
-    const { calories, fat, protein, carbs, sodium, sugar, image, food, index} = props;
+    const { calories, fat, protein, carbs, sodium, sugar, image, food, index, score, feedback} = props;
 
     return <div style={{ background: "linear-gradient(90deg, rgba(137,0,171,1) 24%, rgba(93,213,255,1) 81%)", borderRadius: "10px", padding: "10px", marginBottom: "10px", color: "black"}}>
         <h3>{food || ""}</h3>
@@ -20,6 +20,11 @@ function Meal(props) {
                 <p>Carbohydrates: {carbs.toFixed(1) + " g" || "N/A"}</p>
                 <p>Sodium: {sodium.toFixed(1) + " mg" || "N/A"}</p>
                 <p>Sugar: {sugar.toFixed(1) + " g" || "N/A"}</p>
+            </div>
+            <div>Feedback
+                <p>1.{feedback[0]}</p>
+                <p>2.{feedback[1]}</p>
+                <p>3.{feedback[2]}</p>
             </div>
         </div>
 

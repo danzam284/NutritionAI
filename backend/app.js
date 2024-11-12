@@ -106,7 +106,7 @@ async function sendAPIDescription(filename, mimeType) {
       },
     },
     {
-      text: "There is an uploaded food image. Your goal is to get each different part of the image and return it in a standard format of {food1}|{food2}|{foodn}. For example, if the picture was a cheeseburger with fries and a beer, you would return cheeseburger|fries|beer",
+      text: "There is an uploaded food image. Your goal is to get each different part of the image and return it in a standard format of {food1}|{food2}|{foodn}. For example, if the picture was a cheeseburger with fries and a beer, you would return cheeseburger|fries|beer.",
     },
   ]);
   const text = result.response.text();
@@ -372,6 +372,42 @@ app.post("/upload", async (req, res) => {
         }
       }
     }
+
+    // Nutrition Score
+    const NutritionScorePrompt = `Here is my food, which includes the following items: ${geminiIngredients}.
+    Here are the nutritional details for these food items:
+    - Calories: ${cumulativeFoodData["calories"]} kcal
+    - Fat: ${cumulativeFoodData["fat"]} g
+    - Carbohydrates: ${cumulativeFoodData["carbohydrates"]} g
+    - Protein: ${cumulativeFoodData["protein"]} g
+    - Sodium: ${cumulativeFoodData["sodium"]} mg
+    - Sugar: ${cumulativeFoodData["sugar"]} g
+
+    Please evaluate this food based on standard human health guidelines and provide:
+
+    1. **A health score between 0.0 and 100.0** (with 100.0 being the healthiest).
+    2. **Feedback** about the food's nutritional content.
+
+    **Feedback Requirements:**
+    - Provide up to **3 bullet-point suggestions**.
+    - Each suggestion should be **no more than 30 words**.
+    - Format the feedback as individual suggestions separated by a pipe '|'.
+
+    Format your response as: **{score}|{Suggestion_1}|{Suggestion_2}|{Suggestion_3}**
+
+    For example: **60|Reduce calorie intake.|Lower sodium levels.|Increase vegetable consumption.**`
+    console.log(NutritionScorePrompt)
+    console.log(typeof(NutritionScorePrompt))
+    let ScoreResult = await model.generateContent(NutritionScorePrompt);
+    ScoreResult = ScoreResult.response.text().split('|')
+    const NutritionScore = ScoreResult[0].replace('##','').trim()
+    const NutritionFeedback = ScoreResult.splice(1,3)
+    console.log(NutritionScore)
+    console.log(NutritionFeedback)
+
+    // Put info in to
+    cumulativeFoodData["NutritionScore"] = Number(NutritionScore)
+    cumulativeFoodData["NutritionFeedback"] = NutritionFeedback
 
     // Clean up file after processing
     if (fs.existsSync(filepath)) {
