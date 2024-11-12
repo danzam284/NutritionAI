@@ -7,7 +7,8 @@ import Home from "./components/Home.jsx";
 import Profile from "./components/Profile.jsx";
 import SignedOutPage from "./components/SignedOutPage.jsx";
 import SearchFriends from "./components/SearchFriends.jsx";
-import FriendsMeals from "./components/FriendsMeals.jsx"; // Import the new FriendsMeals component
+import FriendsMeals from "./components/FriendsMeals.jsx";
+import Tracking from "./components/Tracking.jsx";
 
 function App() {
   return (
@@ -26,6 +27,7 @@ function App() {
           <Route path="/profile" element={<Profile />} />
           <Route path="/add-friends" element={<SearchFriends />} />
           <Route path="/friends-meals" element={<FriendsMeals />} />
+          <Route path="/tracking" element={<Tracking />} />
         </Routes>
       </SignedIn>
     </div>

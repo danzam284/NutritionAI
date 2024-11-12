@@ -27,6 +27,7 @@ function Home() {
         <Link to="/profile">Profile</Link>
         <Link to="/add-friends">Add Friends</Link>
         <Link to="/friends-meals">View Friends Meals</Link>
+        <Link to="/tracking">Goal Tracking</Link>
       </div>
     </div>
   );
