@@ -25,7 +25,7 @@ function App() {
           <Route path="/upload" element={<Upload />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/add-friends" element={<SearchFriends />} />
-          <Route path="/friends-meals" element={<FriendsMeals />} /> 
+          <Route path="/friends-meals" element={<FriendsMeals />} />
         </Routes>
       </SignedIn>
     </div>
