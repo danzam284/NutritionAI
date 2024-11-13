@@ -56,6 +56,8 @@ const FriendsMeals = () => {
         {meals.length > 0 ? (
           meals.map((meal, index) => (
             <Meal
+              score={meal["NutritionScore"]}
+              feedback={meal["NutritionFeedback"]}
               calories={meal["calories"]}
               fat={meal["fat"]}
               protein={meal["protein"]}

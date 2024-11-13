@@ -135,6 +135,8 @@ const Profile = () => {
         {images.length > 0 ? (
           images.map((item, index) => (
             <Meal
+              score={item["NutritionScore"]}
+              feedback={item["NutritionFeedback"]}
               calories={item["calories"]}
               fat={item["fat"]}
               protein={item["protein"]}
