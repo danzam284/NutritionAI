@@ -396,14 +396,10 @@ app.post("/upload", async (req, res) => {
     Format your response as: **{score}|{Suggestion_1}|{Suggestion_2}|{Suggestion_3}**
 
     For example: **60|Reduce calorie intake.|Lower sodium levels.|Increase vegetable consumption.**`
-    console.log(NutritionScorePrompt)
-    console.log(typeof(NutritionScorePrompt))
     let ScoreResult = await model.generateContent(NutritionScorePrompt);
     ScoreResult = ScoreResult.response.text().split('|')
     const NutritionScore = ScoreResult[0].replace('##','').trim()
     const NutritionFeedback = ScoreResult.splice(1,3)
-    console.log(NutritionScore)
-    console.log(NutritionFeedback)
 
     // Put info in to
     cumulativeFoodData["NutritionScore"] = Number(NutritionScore)
