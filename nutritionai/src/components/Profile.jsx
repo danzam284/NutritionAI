@@ -78,22 +78,23 @@ const Profile = () => {
     }
   }, [isSignedIn]);
 
-  useEffect(() => {
-    if (isSignedIn) {
-      const fetchGoals = async () => {
-        try {
-          const resposne = await axios.get(`http://localhost:3000/getgoals/${user.id}`);
-        } catch (e) {
-          console.error("Error fetching goals: ", e);
-          setError(e);
-        } finally {
-          setLoading(false);
-        }
-      };
+  // useEffect(() => {
+  //   if (isSignedIn) {
+  //     const fetchGoals = async () => {
+  //       try {
+  //         const response = await axios.get(`http://localhost:3000/getgoals/${user.id}`);
+  //         console.log(response);
+  //       } catch (e) {
+  //         console.error("Error fetching goals: ", e);
+  //         setError(e);
+  //       } finally {
+  //         setLoading(false);
+  //       }
+  //     };
 
-      fetchGoals();
-    }
-  }, [isSignedIn]);
+  //     fetchGoals();
+  //   }
+  // }, [isSignedIn]);
 
   // Loading state
   if (loading) {

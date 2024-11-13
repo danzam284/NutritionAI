@@ -367,7 +367,6 @@ app.post("/upload", async (req, res) => {
             base64Image: base64Image,
             poster: posterId,
             food: fooddata.description,
-            timestamp: new Date().getTime(),
             likes: [],
             calories: fooddata.foodNutrients[3]?.value,
             fat: fooddata.foodNutrients[1]?.value,
@@ -537,6 +536,7 @@ app.post("/add-goal-description", async (req, res) => {
 
 app.get("/getgoals/:id", async (req, res) => {
   try {
+    // ! IMPLEMENTS
   } catch (e) {
     console.error("Error fetching user goal descriptions: ", e);
     res.status(500).json({ error: "Failed to fetch user goal descriptions" });
