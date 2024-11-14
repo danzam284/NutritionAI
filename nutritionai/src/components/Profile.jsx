@@ -62,7 +62,7 @@ const Profile = () => {
   }
 
   return (
-    <div className="saved-meal-page">
+    <div className="saved-meal-page" style={{display: "flex", justifyContent: "center", alignItems: "center", flexDirection: "column"}}>
 
       <Modal 
         title="Enter Nutrition Goals" 
