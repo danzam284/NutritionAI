@@ -21,7 +21,8 @@
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.21.0",
-    "multer": "^1.4.5-lts.1"
+    "multer": "^1.4.5-lts.1",
+    "uuid": "^11.0.3"
   },
   "devDependencies": {
     "@babel/plugin-transform-modules-commonjs": "^7.25.9",

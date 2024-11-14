@@ -5,6 +5,7 @@ import dotenv from "dotenv";
 import axios from "axios";
 import path from "path";
 import { fileURLToPath } from "url";
+import { v4 as uuidv4 } from "uuid";
 dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
@@ -73,6 +74,7 @@ async function createUser(id, email, username, pic) {
     carbohydrateThreshold: null,
     fatThreshold: null,
     caloriesThreshold: null,
+    goals: [], // list of goals
   };
   return new Promise((resolve, reject) => {
     usersDB.insert(newUser, (error, newDoc) => {
@@ -86,6 +88,15 @@ async function createUser(id, email, username, pic) {
   });
 }
 
+async function uploadFileToGemini(filename, mimeType) {
+  const uploadResult = await fileManager.uploadFile(filename, {
+    mimeType: mimeType,
+    displayName: filename,
+  });
+
+  return uploadResult;
+}
+
 /**
  * Sends an API call to gemini was 2 components: the image and prompt
  * @param {filename} The name of the image file to be uploaded as part of the Gemini prompt
@@ -93,10 +104,7 @@ async function createUser(id, email, username, pic) {
  * @returns The text response of Gemini
  */
 async function sendAPIDescription(filename, mimeType) {
-  const uploadResult = await fileManager.uploadFile(filename, {
-    mimeType: mimeType,
-    displayName: filename,
-  });
+  const uploadResult = await uploadFileToGemini(filename, mimeType);
 
   const result = await model.generateContent([
     {
@@ -146,68 +154,78 @@ async function nutritionFacts(text) {
 app.post("/newUser", async (req) => {
   const exists = await userExists(req.body.id);
   if (!exists) {
-    createUser(
-      req.body.id,
-      req.body.email,
-      req.body.username,
-      req.body.profilePicture,
-    );
+    createUser(req.body.id, req.body.email, req.body.username, req.body.profilePicture);
   }
 });
+
+async function toggleFriend(userId, targetUser, adding) {
+  try {
+    // Validate if users are present
+    const currentUser = await usersDB.findAsync({ id: userId });
+    const otherUser = await usersDB.findAsync({ username: targetUser });
+
+    // Check if you can find currentUser in DB
+    if (currentUser.length === 0) {
+      return {
+        error: "Cannot find user in database.",
+      };
+    }
+    // If targetUser cannot be found
+    if (otherUser.length === 0) {
+      return {
+        error: "Could not find a user with name testUser.",
+      };
+    }
+
+    // If currentUser is trying to friend themselves
+    if (userId === otherUser[0].id) {
+      return {
+        error: "You cannot add or remove yourself as a friend.",
+      };
+    }
+
+    const currentUserFriends = currentUser[0].friends;
+    const isFriend = currentUserFriends.includes(targetUser[0].id);
+
+    if (adding && isFriend) {
+      return {
+        error: "Already Friends",
+      };
+    } else if (!adding && !isFriend) {
+      return {
+        error: "Not Friends",
+      };
+    }
+
+    const updateAction = adding
+      ? { $push: { friends: targetUser[0].id } }
+      : { $pull: { friends: targetUser[0].id } };
+    await usersDB.updateAsync({ id: userId }, updateAction);
+
+    return { message: "Friend Status updated successfully" };
+  } catch (e) {
+    return { error: e.message };
+  }
+}
 
 //Request takes 3 inputs: current user's id, other user's username, boolean whether adding or removing
 app.post("/toggleFriend", async (req, res) => {
   const userId = req.body.id;
-  const targetUserName = req.body.targetUserName;
+  const targetUser = req.body.targetUserName;
   const adding = req.body.adding;
 
-  const currentUser = await usersDB.findAsync({ id: userId });
-  const otherUser = await usersDB.findAsync({ username: targetUserName });
-  const currentUserFriends = currentUser[0].friends;
+  try {
+    const result = await toggleFriend(userId, targetUser, adding);
 
-  // If targetUser cannot be found
-  if (otherUser.length === 0) {
-    return res
-      .status(400)
-      .send(`Could not find a user with name ${targetUserName}.`);
-  }
-
-  // If currentUser is trying to friend themselves
-  if (userId === otherUser[0].id) {
-    return res
-      .status(400)
-      .send("You cannot add or remove yourself as a friend.");
-  }
-
-  //User is already friends with other user
-  if (currentUserFriends.includes(otherUser[0].id)) {
-    if (adding) {
-      return res
-        .status(400)
-        .send(`You are already friends with ${targetUserName}.`);
-    } else {
-      await usersDB.updateAsync(
-        { id: userId },
-        { $pull: { friends: otherUser[0].id } },
-      );
+    if (result.error) {
+      res.status(400).json({ error: result.error });
     }
-  } else {
-    //User is not friends with other user
-    if (!adding) {
-      return res
-        .status(400)
-        .send(
-          `You cannot remove ${targetUserName} as a friend because you are not friends with them.`,
-        );
-    } else {
-      await usersDB.updateAsync(
-        { id: userId },
-        { $push: { friends: otherUser[0].id } },
-      );
-    }
-  }
 
-  res.status(200).send("Changes Made.");
+    res.status(200).send("Changes Made.");
+  } catch (e) {
+    console.error("Error: ", e);
+    res.status(500).json({ error: "Database error" });
+  }
 });
 
 async function getAllUsers() {
@@ -349,7 +367,6 @@ app.post("/upload", async (req, res) => {
             base64Image: base64Image,
             poster: posterId,
             food: fooddata.description,
-            timestamp: new Date().getTime(),
             likes: [],
             calories: fooddata.foodNutrients[3]?.value,
             fat: fooddata.foodNutrients[1]?.value,
@@ -360,13 +377,10 @@ app.post("/upload", async (req, res) => {
           };
         } else {
           cumulativeFoodData["food"] += ", " + fooddata.description;
-          cumulativeFoodData["calories"] +=
-            fooddata.foodNutrients[3]?.value ?? 0;
+          cumulativeFoodData["calories"] += fooddata.foodNutrients[3]?.value ?? 0;
           cumulativeFoodData["fat"] += fooddata.foodNutrients[1]?.value ?? 0;
-          cumulativeFoodData["carbohydrates"] +=
-            fooddata.foodNutrients[2]?.value ?? 0;
-          cumulativeFoodData["protein"] +=
-            fooddata.foodNutrients[0]?.value ?? 0;
+          cumulativeFoodData["carbohydrates"] += fooddata.foodNutrients[2]?.value ?? 0;
+          cumulativeFoodData["protein"] += fooddata.foodNutrients[0]?.value ?? 0;
           cumulativeFoodData["sodium"] += fooddata.foodNutrients[8]?.value ?? 0;
           cumulativeFoodData["sugar"] += fooddata.foodNutrients[4]?.value ?? 0;
         }
@@ -395,15 +409,15 @@ app.post("/upload", async (req, res) => {
 
     Format your response as: **{score}|{Suggestion_1}|{Suggestion_2}|{Suggestion_3}**
 
-    For example: **60|Reduce calorie intake.|Lower sodium levels.|Increase vegetable consumption.**`
+    For example: **60|Reduce calorie intake.|Lower sodium levels.|Increase vegetable consumption.**`;
     let ScoreResult = await model.generateContent(NutritionScorePrompt);
-    ScoreResult = ScoreResult.response.text().split('|')
-    const NutritionScore = ScoreResult[0].replace('##','').trim()
-    const NutritionFeedback = ScoreResult.splice(1,3)
+    ScoreResult = ScoreResult.response.text().split("|");
+    const NutritionScore = ScoreResult[0].replace("##", "").trim();
+    const NutritionFeedback = ScoreResult.splice(1, 3);
 
     // Put info in to
-    cumulativeFoodData["NutritionScore"] = Number(NutritionScore)
-    cumulativeFoodData["NutritionFeedback"] = NutritionFeedback
+    cumulativeFoodData["NutritionScore"] = Number(NutritionScore);
+    cumulativeFoodData["NutritionFeedback"] = NutritionFeedback;
 
     // Clean up file after processing
     if (fs.existsSync(filepath)) {
@@ -461,9 +475,105 @@ async function updateGoals(userId, macronutrients) {
         fat: macronutrients.fat ?? 60,
         fatThreshold: macronutrients.fatt ?? 20,
       },
-    },
+    }
   );
 }
+
+/**
+ * Generates a personalized nutrition goal suggestion based on the provided input by user.
+ *
+ * This function uses the Gemini AI model to generate a brief, personalized suggestion
+ * for a nutrition goal, based on the user's description. The function validates the
+ * prompt, ensuring it is a non-empty string and does not exceed 50 characters.
+ *
+ * @param {string} prompt A small description
+ * @returns {string} A suggestion for a nutrition goal created by a Gemini AI response
+ * @throws Will throw an error if the prompt is not a string, is empty, or exceeds 50 characters.
+ */
+async function suggestGoal(prompt) {
+  if (typeof prompt !== "string") {
+    throw Error("Prompt must be of type string");
+  }
+
+  console.log(prompt);
+
+  prompt = prompt.trim();
+
+  if (prompt.length <= 0 || prompt.length > 50) {
+    if (prompt.length <= 0) {
+      throw Error("Prompt must not be empty");
+    }
+    if (prompt.length > 100) {
+      throw Error("Prompt must not exceed 100 characters");
+    }
+  }
+
+  // Build the prompt to encourage the model to generate a concise, goal-oriented response
+  const fullprompt = `
+    Provide a clear, actionable nutrition goal suggestion for a user with the following focus: "${prompt}".
+    Limit the suggestion to a single sentence of 30 words or less.
+    Example suggestions: "Focus on protein-rich foods for increased muscle strength." 
+    or "Increase whole grains for sustained energy throughout the day."
+  `;
+
+  const result = await model.generateContent([{ text: fullprompt }]);
+  const text = result.response.text();
+  return text;
+}
+
+/**
+ * Edits the user DB to set a goal description of what the user wants.
+ * @param {id} userId
+ * @param {string} goalDescription
+ */
+async function addGoalsDescription(userId, goalDescription) {
+  await usersDB.updateAsync(
+    { id: userId },
+    {
+      $push: {
+        goals: { id: uuidv4(), description: goalDescription },
+      },
+    }
+  );
+}
+
+// Define route for goal suggestions
+app.post("/suggest-goal", async (req, res) => {
+  try {
+    const { prompt } = req.body;
+    if (!prompt) {
+      return res.status(400).json({ error: "Prompt is required" });
+    }
+
+    const goalSuggestion = await suggestGoal(prompt);
+
+    res.json({ suggestion: goalSuggestion });
+  } catch (error) {
+    console.error("Error generating goal description:", error);
+    res.status(500).json({ error: "Failed to generate goal" });
+  }
+});
+
+app.post("/add-goal-description", async (req, res) => {
+  try {
+    const { id, goalDescription } = req.body;
+
+    await addGoalsDescription(id, goalDescription);
+    res.status(200).send();
+  } catch (e) {
+    console.error("Error updating goal description: ", e);
+    res.status(500).json({ error: "Failed to update goal description" });
+  }
+});
+
+app.get("/getgoals/:id", async (req, res) => {
+  try {
+    // ! IMPLEMENTS
+  } catch (e) {
+    console.error("Error fetching user goal descriptions: ", e);
+    res.status(500).json({ error: "Failed to fetch user goal descriptions" });
+  }
+});
 
 app.post("/updateGoals", async (req, res) => {
   try {
@@ -496,4 +606,5 @@ export {
   mealsDB,
   searchUsers,
   updateGoals,
+  suggestGoal,
 };

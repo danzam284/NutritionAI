@@ -1,4 +1,17 @@
-import { nutritionFacts, createUser, usersDB, userExists, sendAPIDescription, getAllUsers, getMealsByUser, addMealForUser, mealsDB, searchUsers, updateGoals } from './app.js';
+import {
+  nutritionFacts,
+  createUser,
+  usersDB,
+  userExists,
+  sendAPIDescription,
+  getAllUsers,
+  getMealsByUser,
+  addMealForUser,
+  mealsDB,
+  searchUsers,
+  updateGoals,
+  suggestGoal,
+} from "./app.js";
 
 describe("Test Nutrition API Call", () => {
   test("Should throw if in github but pass locally", async () => {
@@ -12,7 +25,6 @@ describe("Test Nutrition API Call", () => {
 });
 
 describe("Test Database User Functions", () => {
-
   test("Test adding a user", async () => {
     const addedUser = await createUser(1, "fake@gmail.com", "fakeUser", "pic");
 
@@ -29,7 +41,6 @@ describe("Test Database User Functions", () => {
   });
 
   test("Test userExists with non-existing user function", async () => {
-
     //Removes all previously added users with an ID of 1
     await usersDB.removeAsync({ id: 1 }, { multi: true });
 
@@ -38,7 +49,6 @@ describe("Test Database User Functions", () => {
   });
 
   test("Test getAllUsers function", async () => {
-
     //Removes all previously added users with an ID of 1
     const allUsers = await getAllUsers();
     expect(Array.isArray(allUsers)).toBe(true);
@@ -86,8 +96,15 @@ describe("Test Database User Functions", () => {
     await createUser(1, "fake@gmail.com", "fakeUser", "pic");
 
     const nutritionGoals = {
-      cal: 1, calt: 1, pro: 1, prot: 1, car: 1, cart: 1, fat: 1, fatt: 1
-    }
+      cal: 1,
+      calt: 1,
+      pro: 1,
+      prot: 1,
+      car: 1,
+      cart: 1,
+      fat: 1,
+      fatt: 1,
+    };
 
     //Updates the user with all goals set to 1
     await updateGoals(1, nutritionGoals);
@@ -117,7 +134,6 @@ describe("Test Gemini API Call", () => {
 });
 
 describe("Test Database Meal Functions", () => {
-
   test("Test getting meals by a user", async () => {
     const meals = await getMealsByUser(1);
     expect(meals.length).toBe(0);
@@ -134,5 +150,28 @@ describe("Test Database Meal Functions", () => {
     await mealsDB.removeAsync({ poster: 1 }, { multi: true });
     await usersDB.removeAsync({ id: 1 }, { multi: true });
   });
-  
+});
+
+describe("Test suggestGoal function", () => {
+  it("should return a valid goal suggestion for a valid prompt", async () => {
+    const prompt = "Increase energy levels";
+    const goal = await suggestGoal(prompt);
+    console.log(goal);
+    expect(goal).toBeDefined();
+  });
+
+  it("should throw an error for an empty prompt", async () => {
+    const prompt = "";
+    await expect(suggestGoal(prompt)).rejects.toThrow("Prompt must not be empty");
+  });
+
+  it("should throw an error for a prompt exceeding 50 characters", async () => {
+    const prompt = "This is a really long prompt that exceeds fifty characters.";
+    await expect(suggestGoal(prompt)).rejects.toThrow("Prompt must not exceed 50 characters");
+  });
+
+  it("should throw an error for a non-string prompt", async () => {
+    const prompt = 12345;
+    await expect(suggestGoal(prompt)).rejects.toThrow("Prompt must be of type string");
+  });
 });
