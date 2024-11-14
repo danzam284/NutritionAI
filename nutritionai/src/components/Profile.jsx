@@ -134,6 +134,7 @@ const Profile = () => {
       <div className="image-gallery">
         {images.length > 0 ? (
           images.map((item, index) => (
+            <div key={index}>
             <Meal
               score={item["NutritionScore"]}
               feedback={item["NutritionFeedback"]}
@@ -147,6 +148,7 @@ const Profile = () => {
               food={item["food"]}
               index={index}
             />
+            </div>
           ))
         ) : (
           <p>No images found.</p>

@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
-import axios from "axios";
 import { useUser } from "@clerk/clerk-react";
+import axios from "axios";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Meal from "./Meal";
 
@@ -16,11 +16,11 @@ const FriendsMeals = () => {
     const fetchFriendsMeals = async () => {
       try {
         const response = await axios.get(`http://localhost:3000/getAllFriend/${user.id}`);
-        
+
         // Check if we have any friends
         if (response.data.length > 0) {
           // Get the first friend's ID for example
-          setFriendId(response.data[0]); 
+          setFriendId(response.data[0]);
 
           const friendMealsPromises = response.data.map(async (friendId) => {
             const friendMeals = await axios.get(`http://localhost:3000/savedmeal/${friendId}`);
@@ -52,22 +52,24 @@ const FriendsMeals = () => {
     <div>
       <h1>This is {friendUsername}'s meals:</h1> {/* Display friend's username */}
       <Link to="/">Home</Link>
-      <div>
+      <div >
         {meals.length > 0 ? (
           meals.map((meal, index) => (
-            <Meal
-              score={meal["NutritionScore"]}
-              feedback={meal["NutritionFeedback"]}
-              calories={meal["calories"]}
-              fat={meal["fat"]}
-              protein={meal["protein"]}
-              carbs={meal["carbohydrates"]}
-              sodium={meal["sodium"]}
-              sugar={meal["sugar"]}
-              image={meal["base64Image"]}
-              food={meal["food"]}
-              index={index}
-            />
+            <div key={index}>
+              <Meal
+                score={meal["NutritionScore"]}
+                feedback={meal["NutritionFeedback"]}
+                calories={meal["calories"]}
+                fat={meal["fat"]}
+                protein={meal["protein"]}
+                carbs={meal["carbohydrates"]}
+                sodium={meal["sodium"]}
+                sugar={meal["sugar"]}
+                image={meal["base64Image"]}
+                food={meal["food"]}
+                index={index}
+              />
+            </div>
           ))
         ) : (
           <p>No meals found.</p>
