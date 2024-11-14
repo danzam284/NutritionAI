@@ -130,6 +130,7 @@ function Upload() {
 
       {response && (
         <Meal
+          score={response["NutritionScore"]}
           calories={response["calories"]}
           fat={response["fat"]}
           protein={response["protein"]}
@@ -138,6 +139,7 @@ function Upload() {
           sugar={response["sugar"]}
           image={response["base64Image"]}
           food={response["food"]}
+          feedback={response["NutritionFeedback"]}
           index={0}
         />
       )}

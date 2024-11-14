@@ -62,7 +62,7 @@ const Profile = () => {
   }
 
   return (
-    <div className="saved-meal-page">
+    <div className="saved-meal-page" style={{display: "flex", justifyContent: "center", alignItems: "center", flexDirection: "column"}}>
 
       <Modal 
         title="Enter Nutrition Goals" 
@@ -134,7 +134,10 @@ const Profile = () => {
       <div className="image-gallery">
         {images.length > 0 ? (
           images.map((item, index) => (
+            <div key={index}>
             <Meal
+              score={item["NutritionScore"]}
+              feedback={item["NutritionFeedback"]}
               calories={item["calories"]}
               fat={item["fat"]}
               protein={item["protein"]}
@@ -145,6 +148,7 @@ const Profile = () => {
               food={item["food"]}
               index={index}
             />
+            </div>
           ))
         ) : (
           <p>No images found.</p>
