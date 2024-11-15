@@ -154,10 +154,14 @@ describe("Test Database Meal Functions", () => {
 
 describe("Test suggestGoal function", () => {
   it("should return a valid goal suggestion for a valid prompt", async () => {
-    const prompt = "Increase energy levels";
-    const goal = await suggestGoal(prompt);
-    console.log(goal);
-    expect(goal).toBeDefined();
+    if (process.env.API_KEY) {
+      const prompt = "Increase energy levels";
+      const goal = await suggestGoal(prompt);
+      expect(goal).toBeDefined();
+    } else {
+      await expect(sendAPIDescription("dontRemove.png", "image/png")).rejects.toThrow();
+    }
+    
   });
 
   it("should throw an error for an empty prompt", async () => {
