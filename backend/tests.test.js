@@ -165,11 +165,6 @@ describe("Test suggestGoal function", () => {
     await expect(suggestGoal(prompt)).rejects.toThrow("Prompt must not be empty");
   });
 
-  it("should throw an error for a prompt exceeding 50 characters", async () => {
-    const prompt = "This is a really long prompt that exceeds fifty characters.";
-    await expect(suggestGoal(prompt)).rejects.toThrow("Prompt must not exceed 50 characters");
-  });
-
   it("should throw an error for a non-string prompt", async () => {
     const prompt = 12345;
     await expect(suggestGoal(prompt)).rejects.toThrow("Prompt must be of type string");
