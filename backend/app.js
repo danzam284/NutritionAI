@@ -591,6 +591,51 @@ app.get("/savedmeal/:id", async (req, res) => {
   res.json(doc);
 });
 
+async function addNotification(userId, notification) {
+  await usersDB.updateAsync(
+    { id: userId },
+    {
+      $push: {
+        notifications: { seen: false, message: notification },
+      },
+    }
+  );
+}
+
+app.post("/addNotification", async (req, res) => {
+  try {
+    await addNotification(req.body.userId, req.body.message);
+    res.status(200).send();
+  } catch(e) {
+    res.status(400).send(e);
+  }
+});
+
+async function clearNotifications(userId) {
+  const user = await usersDB.findOneAsync({ id: userId });
+  const updatedNotifications = user.notifications.map(notification => {
+    return {
+      seen: true,
+      message: notification.message
+    }
+  });
+  
+  await usersDB.updateAsync(
+    { id: userId },
+    { $set: { notifications: updatedNotifications } },
+    {}
+  );
+}
+
+app.post("/seenNotifications", async (req, res) => {
+  try {
+    await clearNotifications(req.body.userId);
+    res.status(200).send();
+  } catch(e) {
+    res.status(400).send(e);
+  }
+});
+
 app.listen(3000, () => {
   console.log(`NutritionAI listening at http://localhost:3000`);
 });
@@ -608,4 +653,6 @@ export {
   searchUsers,
   updateGoals,
   suggestGoal,
+  addNotification,
+  clearNotifications
 };

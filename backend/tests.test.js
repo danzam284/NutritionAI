@@ -11,6 +11,8 @@ import {
   searchUsers,
   updateGoals,
   suggestGoal,
+  addNotification,
+  clearNotifications
 } from "./app.js";
 
 describe("Test Nutrition API Call", () => {
@@ -172,5 +174,61 @@ describe("Test suggestGoal function", () => {
   it("should throw an error for a non-string prompt", async () => {
     const prompt = 12345;
     await expect(suggestGoal(prompt)).rejects.toThrow("Prompt must be of type string");
+  });
+});
+
+describe("Test notification related function", () => {
+  it("Test adding notification single notification", async () => {
+    //Creates a fake user
+    await createUser(1, "fake@gmail.com", "fakeUser", "pic");
+    await addNotification(1, "This is a test notification");
+
+    //Finds the user and ensures it has 1 notification
+    const users = await getAllUsers();
+    for (let i = 0; i < users.length; i++) {
+      if (users[i].id === 1) {
+        expect(users[i].notifications.length.toBe(1));
+      }
+    }
+
+    //cleans up
+    await usersDB.removeAsync({ id: 1 }, { multi: true });
+  });
+
+  it("Test adding notification 2 notifications", async () => {
+    //Creates a fake user
+    await createUser(1, "fake@gmail.com", "fakeUser", "pic");
+    await addNotification(1, "Notification1");
+    await addNotification(1, "Notification2");
+
+    //Finds the user and ensures it has 2 notification with the correct message
+    const users = await getAllUsers();
+    for (let i = 0; i < users.length; i++) {
+      if (users[i].id === 1) {
+        expect(users[i].notifications.length.toBe(2) && users[i].notifications[1].message.toBe("Notification2"));
+      }
+    }
+
+    //cleans up
+    await usersDB.removeAsync({ id: 1 }, { multi: true });
+  });
+
+  it("Test clearing notifications", async () => {
+    //Creates a fake user
+    await createUser(1, "fake@gmail.com", "fakeUser", "pic");
+    await addNotification(1, "This is a test notification");
+    await addNotification(1, "This is a test notification2");
+    await clearNotifications(1);
+
+    //Finds the user and ensures it has 2 notification with the correct message
+    const users = await getAllUsers();
+    for (let i = 0; i < users.length; i++) {
+      if (users[i].id === 1) {
+        expect(users[i].notifications[0].seen.toBe(true) && users[i].notifications[1].seen.toBe(true));
+      }
+    }
+
+    //cleans up
+    await usersDB.removeAsync({ id: 1 }, { multi: true });
   });
 });
