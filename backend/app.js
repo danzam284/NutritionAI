@@ -151,11 +151,12 @@ async function nutritionFacts(text) {
   }
 }
 
-app.post("/newUser", async (req) => {
+app.post("/newUser", async (req, res) => {
   const exists = await userExists(req.body.id);
   if (!exists) {
-    createUser(req.body.id, req.body.email, req.body.username, req.body.profilePicture);
+    await createUser(req.body.id, req.body.email, req.body.username, req.body.profilePicture);
   }
+  res.status(200).send();
 });
 
 async function toggleFriend(userId, targetUser, adding) {
