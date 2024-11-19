@@ -80,8 +80,6 @@ function SearchFriends() {
       <h2>Search for Friends</h2>
       <div id="nav">
         <Link to="/">Home</Link>
-        <Link to="/upload">Upload</Link>
-        <Link to="/savedmeal">Saved Meals</Link>
       </div>
       <input
         type="text"
@@ -117,3 +115,10 @@ function SearchFriends() {
 }
 
 export default SearchFriends;
+
+
+
+
+
+
+
