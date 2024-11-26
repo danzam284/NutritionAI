@@ -66,3 +66,62 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+
+@media (max-width: 768px) {
+  .responsive-container {
+    padding: 10px;
+  }
+  .responsive-heading {
+    font-size: 24px;
+  }
+  .responsive-nav {
+    flex-direction: column;
+    gap: 10px;
+    align-items: center;
+  }
+  .responsive-link {
+    font-size: 16px;
+  }
+  .responsive-button {
+    width: 100%;
+  }
+  .responsive-icon {
+    font-size: 20px;
+  }
+  .responsive-image {
+    width: 100%;
+    height: auto;
+    border-radius: 5px;
+    margin: 10px 0;
+  }
+}
+
+@media (min-width: 769px) {
+  .responsive-container {
+    padding: 20px;
+  }
+  .responsive-heading {
+    font-size: 32px;
+  }
+  .responsive-nav {
+    flex-direction: row;
+    gap: 20px;
+    align-items: flex-start;
+  }
+  .responsive-link {
+    font-size: 20px;
+  }
+  .responsive-button {
+    width: auto;
+  }
+  .responsive-icon {
+    font-size: 30px;
+  }
+  .responsive-image {
+    width: auto;
+    max-width: 400px;
+    height: auto;
+    border-radius: 5px;
+  }
+}
+

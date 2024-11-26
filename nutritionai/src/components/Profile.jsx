@@ -99,8 +99,8 @@ const Profile = () => {
   // Loading state
   if (loading) {
     return (
-      <div>
-        <Link to="/">Home</Link>
+      <div className="responsive-container">
+        <Link className="responsive-link" to="/">Home</Link>
         <p>Loading images...</p>
       </div>
     );
@@ -109,8 +109,8 @@ const Profile = () => {
   // Error state
   if (error) {
     return (
-      <div>
-        <Link to="/">Home</Link>
+      <div className="responsive-container">
+        <Link className="responsive-link" to="/">Home</Link>
         <p>Error loading images: {error.message}</p>
       </div>
     );
@@ -118,7 +118,7 @@ const Profile = () => {
 
   return (
     <div
-      className="saved-meal-page"
+      className="responsive-container saved-meal-page"
       style={{
         display: "flex",
         justifyContent: "center",
@@ -189,7 +189,7 @@ const Profile = () => {
         </div>
       </Modal>
 
-      <Link to="/" style={{ position: "absolute", left: 20, top: 20 }}>
+      <Link className="responsive-link" to="/" style={{ position: "absolute", left: 20, top: 20 }}>
         Home
       </Link>
       <div
@@ -204,7 +204,7 @@ const Profile = () => {
         <div
           style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "10px" }}
         >
-          <h3>{user.username}</h3>
+          <h3 className="responsive-heading">{user.username}</h3>
           <img width={30} src={user.imageUrl}></img>
         </div>
         <p>Email: {user.primaryEmailAddress.emailAddress}</p>
