@@ -72,17 +72,17 @@ function Tracking() {
 
     if (loading) { 
         return <>
-            <Link to="/">Home</Link>
+            <Link className="responsive-link" to="/">Home</Link>
             Loading...
         </>
     }
 
     if (!userData.calories) {
         return <div style={{display: "flex", justifyContent: "center", alignItems: "center", flexDirection: "column"}}>
-            <Link to="/">Home</Link>
-            <h3>Goal Tracking</h3>
+            <Link className="responsive-link" to="/">Home</Link>
+            <h3 className="responsive-heading">Goal Tracking</h3>
             <p>You have not set any goals yet.</p>
-            <button onClick={() => navigate("/profile")} style={{color: "white"}}>Set Goals</button>
+            <button className="responsive-button" onClick={() => navigate("/profile")} style={{color: "white"}}>Set Goals</button>
         </div>
     }
 
@@ -122,8 +122,8 @@ function Tracking() {
             </div>
       </Modal>
 
-        <Link to="/">Home</Link>
-        <h3>Goal Tracking</h3>
+        <Link className="responsive-link" to="/">Home</Link>
+        <h3 className="responsive-heading">Goal Tracking</h3>
         <Calendar
             onClick={(e) => {
                 cal.current = 0;

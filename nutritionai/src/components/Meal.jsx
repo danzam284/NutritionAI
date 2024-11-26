@@ -3,7 +3,7 @@ function Meal(props) {
     props;
 
   return (
-    <div
+    <div className="responsive-container"
       style={{
         background: "linear-gradient(90deg, rgba(137,0,171,1) 24%, rgba(93,213,255,1) 81%)",
         borderRadius: "10px",
@@ -12,7 +12,7 @@ function Meal(props) {
         color: "black",
       }}
     >
-      <h3>{food || ""}</h3>
+      <h3 className="responsive-heading">{food || ""}</h3>
 
       <div style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
         <div>
@@ -21,6 +21,7 @@ function Meal(props) {
           <p>Protein: {protein?.toFixed(1) + " g" || "N/A"}</p>
         </div>
         <img
+          className="responsive-image"
           src={`data:image/png;base64,${image}`}
           style={{ width: "200px", margin: "10px", borderRadius: "10px" }}
           alt={`Meal ${index + 1}`}

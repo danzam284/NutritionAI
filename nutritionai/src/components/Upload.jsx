@@ -90,12 +90,13 @@ function Upload() {
   }
 
   return (
-    <div>
-      <h1>Upload Image Page</h1>
-      <Link to="/">Home</Link>
+    <div className="responsive-container">
+      <h1 className="responsive-heading">Upload Image Page</h1>
+      <Link to="/" className="responsive-link">Home</Link>
       
       <div>
         <button
+          className="responsive-button"
           onClick={toggleMode}
         >
           {isCameraMode ? 'Switch to Upload' : 'Switch to Camera'}
@@ -114,6 +115,7 @@ function Upload() {
             ref={video => video && (video.srcObject = stream)}
           />
           <button
+            className="responsive-button"
             onClick={takePhoto}
           >
             Take Photo
@@ -123,7 +125,7 @@ function Upload() {
 
       {isSubmitted && !response && image && (
         <div>
-          <img src={image} alt="Preview"/>
+          <img className="responsive-image" src={image} alt="Preview"/>
           <p>One Moment...</p>
         </div>
       )}

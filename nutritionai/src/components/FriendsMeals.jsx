@@ -49,9 +49,9 @@ const FriendsMeals = () => {
   if (error) return <p>{error}</p>;
 
   return (
-    <div>
-      <h1>This is {friendUsername}'s meals:</h1> {/* Display friend's username */}
-      <Link to="/">Home</Link>
+    <div className="responsive-container">
+      <h1 className="responsive-heading">This is {friendUsername}'s meals:</h1> {/* Display friend's username */}
+      <Link className="responsive-link" to="/">Home</Link>
       <div >
         {meals.length > 0 ? (
           meals.map((meal, index) => (
