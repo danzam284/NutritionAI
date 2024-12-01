@@ -76,10 +76,10 @@ function SearchFriends() {
   };
 
   return (
-    <div className="search-friends">
-      <h2>Search for Friends</h2>
+    <div className="responsive-container search-friends">
+      <h2 className="responsive-heading">Search for Friends</h2>
       <div id="nav">
-        <Link to="/">Home</Link>
+        <Link className="responsive-link" to="/">Home</Link>
       </div>
       <input
         type="text"
@@ -87,7 +87,7 @@ function SearchFriends() {
         value={searchTerm}
         onChange={handleSearchChange}
       />
-      <button onClick={handleSearch}>Search</button>
+      <button className="responsive-button" onClick={handleSearch}>Search</button>
       <div className="results">
         {filteredUsers && Array.isArray(filteredUsers) && filteredUsers.length > 0 ? (
           filteredUsers.map((user) => (
@@ -95,6 +95,7 @@ function SearchFriends() {
               <span>{user.username}</span>
               {user.isFriend ? (
                 <button
+                  className="responsive-button"
                   onClick={() => {
                     handleRemoveFriend(user.username);
                   }}
@@ -102,7 +103,7 @@ function SearchFriends() {
                   Remove Friend
                 </button>
               ) : (
-                <button onClick={() => handleAddFriend(user.username)}>Add Friend</button>
+                <button className="responsive-button" onClick={() => handleAddFriend(user.username)}>Add Friend</button>
               )}
             </div>
           ))

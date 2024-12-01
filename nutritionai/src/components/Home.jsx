@@ -40,7 +40,7 @@ function Home() {
   }, [isSignedIn]);
 
   return (
-    <div>
+    <div className="responsive-container">
       <Modal 
         title={lookingNew ? "New Notifications" : "Old Notifications"} 
         open={open} 
@@ -69,7 +69,7 @@ function Home() {
               <p>You have no new Notifications</p>
             }
             <br></br>
-            <button onClick={() => setLookingNew(false)}>View Old Notifications</button>
+            <button className="responsive-button" onClick={() => setLookingNew(false)}>View Old Notifications</button>
           </div>
           :
           <div>
@@ -79,7 +79,7 @@ function Home() {
               </div>
             ))}
             <br></br>
-            <button onClick={() => setLookingNew(true)}>View New Notifications</button>
+            <button className="responsive-button" onClick={() => setLookingNew(true)}>View New Notifications</button>
           </div>
         }
       </Modal>
@@ -93,16 +93,17 @@ function Home() {
           }}
           style={{fontSize: "30px", cursor: "pointer"}}
           twoToneColor={"black"}
+          className="responsive-icon"
         />
       </Badge>
 
-      <h1>NutritionAI Homepage</h1>
-      <div id="nav">
-        <Link to="/upload">Upload</Link>
-        <Link to="/profile">Profile</Link>
-        <Link to="/add-friends">Add Friends</Link>
-        <Link to="/friends-meals">View Friends Meals</Link>
-        <Link to="/tracking">Goal Tracking</Link>
+      <h1 className="responsive-heading">NutritionAI Homepage</h1>
+      <div id="nav" className="responsive-nav">
+        <Link to="/upload" className="responsive-link">Upload</Link>
+        <Link to="/profile" className="responsive-link">Profile</Link>
+        <Link to="/add-friends" className="responsive-link">Add Friends</Link>
+        <Link to="/friends-meals" className="responsive-link">View Friends Meals</Link>
+        <Link to="/tracking" className="responsive-link">Goal Tracking</Link>
       </div>
     </div>
   );
