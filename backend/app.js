@@ -392,17 +392,16 @@ app.post("/upload", async (req, res) => {
     if (!user) {
       return res.status(400).send("User not found");
     }
-    const userCalorieGoal = user.calories ?? 2000;  // Default to 2000 if not set
-
+    const userCalorieGoal = user.calories ?? 2000; // Default to 2000 if not set
 
     // Compare meal calories with goal
     if (cumulativeFoodData.calories > userCalorieGoal) {
-      cumulativeFoodData.goalFeedback = `Your calorie goal of ${userCalorieGoal} kcal is not met. The pizza you're eating exceeds your goal by ${cumulativeFoodData.calories - userCalorieGoal} kcal.`;
+      cumulativeFoodData.goalFeedback = `Your calorie goal of ${userCalorieGoal} kcal is not met. The pizza you're eating exceeds your goal by ${
+        cumulativeFoodData.calories - userCalorieGoal
+      } kcal.`;
     } else {
       cumulativeFoodData.goalFeedback = `You are within your calorie goal of ${userCalorieGoal} kcal.`;
     }
-
-    
 
     // Nutrition Score
     const NutritionScorePrompt = `Here is my food, which includes the following items: ${geminiIngredients}.
@@ -622,32 +621,28 @@ app.post("/addNotification", async (req, res) => {
   try {
     await addNotification(req.body.userId, req.body.message);
     res.status(200).send();
-  } catch(e) {
+  } catch (e) {
     res.status(400).send(e);
   }
 });
 
 async function clearNotifications(userId) {
   const user = await usersDB.findOneAsync({ id: userId });
-  const updatedNotifications = user.notifications.map(notification => {
+  const updatedNotifications = user.notifications.map((notification) => {
     return {
       seen: true,
-      message: notification.message
-    }
+      message: notification.message,
+    };
   });
-  
-  await usersDB.updateAsync(
-    { id: userId },
-    { $set: { notifications: updatedNotifications } },
-    {}
-  );
+
+  await usersDB.updateAsync({ id: userId }, { $set: { notifications: updatedNotifications } }, {});
 }
 
 app.post("/seenNotifications", async (req, res) => {
   try {
     await clearNotifications(req.body.userId);
     res.status(200).send();
-  } catch(e) {
+  } catch (e) {
     res.status(400).send(e);
   }
 });
@@ -670,5 +665,5 @@ export {
   updateGoals,
   suggestGoal,
   addNotification,
-  clearNotifications
+  clearNotifications,
 };
