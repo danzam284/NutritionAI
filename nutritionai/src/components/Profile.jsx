@@ -4,17 +4,20 @@ import { useState, useEffect } from "react";
 import { useUser } from "@clerk/clerk-react";
 import { Modal, InputNumber } from "antd";
 import Meal from "./Meal";
+import Navbar from "./Navbar";
 
 const Profile = () => {
-  const [images, setImages] = useState([]); // State to store images
-  const [loading, setLoading] = useState(true); // State for loading
-  const [error, setError] = useState(null); // State for errors
+  const [images, setImages] = useState([]);
+  const [imageLoading, setImageLoading] = useState(true);
+  const [goalsLoading, setGoalsLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [userData, setUserData] = useState(null);
   const [open, setOpen] = useState(false);
   const [toggleGoal, setToggleGoal] = useState(true);
   const { isSignedIn, user } = useUser();
   const [goalPrompt, setGoalPrompt] = useState("");
   const [suggestedGoal, setSuggestedGoal] = useState("");
+  const [userGoals, setUserGoals] = useState([]);
 
   async function updateGoals(cal, calt, pro, prot, car, cart, fat, fatt) {
     await axios.post("http://localhost:3000/updateGoals", {
@@ -70,38 +73,46 @@ const Profile = () => {
           console.error("Error fetching images:", err);
           setError(err);
         } finally {
-          setLoading(false);
+          setImageLoading(false);
+        }
+      };
+      const fetchGoals = async () => {
+        try {
+          const response = await axios.get(`http://localhost:3000/getgoals/${user.id}`);
+          console.log(response.data.goals);
+          setUserGoals(response.data.goals);
+        } catch (e) {
+          console.error("Error fetching goals: ", e);
+          setError(e);
+        } finally {
+          setGoalsLoading(false);
         }
       };
 
+      fetchGoals();
       fetchImages();
     }
   }, [isSignedIn]);
 
-  // useEffect(() => {
-  //   if (isSignedIn) {
-  //     const fetchGoals = async () => {
-  //       try {
-  //         const response = await axios.get(`http://localhost:3000/getgoals/${user.id}`);
-  //         console.log(response);
-  //       } catch (e) {
-  //         console.error("Error fetching goals: ", e);
-  //         setError(e);
-  //       } finally {
-  //         setLoading(false);
-  //       }
-  //     };
-
-  //     fetchGoals();
-  //   }
-  // }, [isSignedIn]);
-
   // Loading state
-  if (loading) {
+  if (imageLoading) {
     return (
       <div className="responsive-container">
-        <Link className="responsive-link" to="/">Home</Link>
+        <Link className="responsive-link" to="/">
+          Home
+        </Link>
         <p>Loading images...</p>
+      </div>
+    );
+  }
+
+  if (goalsLoading) {
+    return (
+      <div className="responsive-container">
+        <Link className="responsive-link" to="/">
+          Home
+        </Link>
+        <p>Loading goals...</p>
       </div>
     );
   }
@@ -110,22 +121,16 @@ const Profile = () => {
   if (error) {
     return (
       <div className="responsive-container">
-        <Link className="responsive-link" to="/">Home</Link>
+        <Link className="responsive-link" to="/">
+          Home
+        </Link>
         <p>Error loading images: {error.message}</p>
       </div>
     );
   }
 
   return (
-    <div
-      className="responsive-container saved-meal-page"
-      style={{
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        flexDirection: "column",
-      }}
-    >
+    <div className="responsive-container bg-gray-100 saved-meal-page flex justify-center items-center flex-col p-4">
       <Modal
         title="Enter Nutrition Goals"
         open={open}
@@ -145,142 +150,194 @@ const Profile = () => {
           );
         }}
       >
-        <p>
-          For each row, the first input is desired goal and the second input is the threshold of
-          having met that goal.
-        </p>
-        <p>
-          The default numbers are either based on your previous goals or the reccomended values.
-        </p>
-        <div
-          style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "10px" }}
-        >
-          <p style={{ textDecoration: "underline" }}>Calories: </p>
-          <InputNumber id="cal" defaultValue={userData.calories ?? 2000} suffix="cal" />
-          <p>±</p>
-          <InputNumber id="calt" defaultValue={userData.caloriesThreshold ?? 400} suffix="cal" />
-        </div>
+        <div className="responsive-container">
+          <p className="mb-4">
+            For each row, the first input is desired goal and the second input is the threshold of
+            having met that goal.
+          </p>
+          <p>
+            The default numbers are either based on your previous goals or the reccomended values.
+          </p>
+          <div className="macro-container py-4">
+            <div className="flex justify-center items-center gap-4 mb-4">
+              <p className="text-lg font-underline">Calories: </p>
+              <InputNumber id="cal" defaultValue={userData.calories ?? 2000} suffix="cal" />
+              <p>±</p>
+              <InputNumber
+                id="calt"
+                defaultValue={userData.caloriesThreshold ?? 400}
+                suffix="cal"
+              />
+            </div>
 
-        <div
-          style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "10px" }}
-        >
-          <p style={{ textDecoration: "underline" }}>Protein: </p>
-          <InputNumber id="pro" defaultValue={userData.protein ?? 50} suffix="g" />
-          <p>±</p>
-          <InputNumber id="prot" defaultValue={userData.proteinThreshold ?? 10} suffix="g" />
-        </div>
+            <div className="flex justify-center items-center gap-4 mb-4">
+              <p className="text-lg font-underline">Protein: </p>
+              <InputNumber id="pro" defaultValue={userData.protein ?? 50} suffix="g" />
+              <p>±</p>
+              <InputNumber id="prot" defaultValue={userData.proteinThreshold ?? 10} suffix="g" />
+            </div>
 
-        <div
-          style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "10px" }}
-        >
-          <p style={{ textDecoration: "underline" }}>Carbohydrates: </p>
-          <InputNumber id="car" defaultValue={userData.carbohydrates ?? 250} suffix="g" />
-          <p>±</p>
-          <InputNumber id="cart" defaultValue={userData.carbohydrateThreshold ?? 50} suffix="g" />
-        </div>
+            <div className="flex justify-center items-center gap-4 mb-4">
+              <p className="text-lg font-underline">Carbohydrates: </p>
+              <InputNumber id="car" defaultValue={userData.carbohydrates ?? 250} suffix="g" />
+              <p>±</p>
+              <InputNumber
+                id="cart"
+                defaultValue={userData.carbohydrateThreshold ?? 50}
+                suffix="g"
+              />
+            </div>
 
-        <div
-          style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "10px" }}
-        >
-          <p style={{ textDecoration: "underline" }}>Fats: </p>
-          <InputNumber id="fat" defaultValue={userData.fat ?? 60} suffix="g" />
-          <p>±</p>
-          <InputNumber id="fatt" defaultValue={userData.fatThreshold ?? 20} suffix="g" />
+            <div className="flex justify-center items-center gap-4 mb-4">
+              <p className="text-lg font-underline">Fats: </p>
+              <InputNumber id="fat" defaultValue={userData.fat ?? 60} suffix="g" />
+              <p>±</p>
+              <InputNumber id="fatt" defaultValue={userData.fatThreshold ?? 20} suffix="g" />
+            </div>
+          </div>
         </div>
       </Modal>
 
-      <Link className="responsive-link" to="/" style={{ position: "absolute", left: 20, top: 20 }}>
-        Home
-      </Link>
-      <div
-        style={{
-          backgroundColor: "aliceblue",
-          color: "black",
-          width: "50vw",
-          padding: "10px",
-          borderRadius: "10px",
-        }}
-      >
-        <div
-          style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "10px" }}
-        >
-          <h3 className="responsive-heading">{user.username}</h3>
-          <img width={30} src={user.imageUrl}></img>
-        </div>
-        <p>Email: {user.primaryEmailAddress.emailAddress}</p>
-        <p>Joined {user.createdAt.toLocaleDateString("en-US")}</p>
-        <p>Meals Logged: {images.length}</p>
-        <p>Friends: {userData.friends.length}</p>
-        <br></br>
+      <div>
+        <h1 className="text-black font-bold text-5xl">NutritionAI</h1>
 
-        <h3>Tracking</h3>
-        <button onClick={() => setOpen(true)}>Update Nutrition Goals</button>
+        <Navbar />
+      </div>
+
+      <div className="responsive-container bg-blue-50 text-black w-full sm:w-1/2 p-6 rounded-lg shadow-lg mt-4">
+        <div className="flex justify-center items-center gap-4 mb-4">
+          <h3 className="responsive-heading text-xl font-semibold">{user.username}</h3>
+          <img className="w-8 h-8 rounded-full" width={30} src={user.imageUrl}></img>
+        </div>
+        <table className="min-w-full table-auto md:table-fixed border-separate border-spacing-4">
+          <thead>
+            <tr>
+              <th className="text-lg text-gray-700">Info</th>
+              <th className="text-lg text-gray-700">Details</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td className="text-sm text-gray-600">Email</td>
+              <td className="text-sm text-gray-900">{user.primaryEmailAddress.emailAddress}</td>
+            </tr>
+            <tr>
+              <td className="text-sm text-gray-600">Joined</td>
+              <td className="text-sm text-gray-900">
+                {user.createdAt.toLocaleDateString("en-US")}
+              </td>
+            </tr>
+            <tr>
+              <td className="text-sm text-gray-600">Meals Logged</td>
+              <td className="text-sm text-gray-900">{images.length}</td>
+            </tr>
+            <tr>
+              <td className="text-sm text-gray-600">Friends</td>
+              <td className="text-sm text-gray-900">{userData.friends.length}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3 className="mt-6 text-xl font-semibold">Tracking</h3>
+        <button
+          onClick={() => setOpen(true)}
+          className="bg-blue-500 text-white px-4 py-2 rounded-lg mt-4"
+        >
+          Update Nutrition Goals
+        </button>
         {!userData.protein ? (
-          <p>Your nutrition goals have not been set.</p>
+          <p className="mt-4 text-gray-600">Your nutrition goals have not been set.</p>
         ) : (
-          <div>
-            <div>
-              <p>
-                Calories Goal: {userData.calories} cal ± {userData.caloriesThreshold} cal
-              </p>
-              <p>
-                Protein Goal: {userData.protein}g ± {userData.proteinThreshold}g
-              </p>
-              <p>
-                Carbohydrates Goal: {userData.carbohydrates}g ± {userData.carbohydrateThreshold}g
-              </p>
-              <p>
-                Fat Goal: {userData.fat}g ± {userData.fatThreshold}g
-              </p>
-            </div>
+          <div className="mt-4 space-y-2">
+            <p>
+              Calories Goal: {userData.calories} cal ± {userData.caloriesThreshold} cal
+            </p>
+            <p>
+              Protein Goal: {userData.protein}g ± {userData.proteinThreshold}g
+            </p>
+            <p>
+              Carbohydrates Goal: {userData.carbohydrates}g ± {userData.carbohydrateThreshold}g
+            </p>
+            <p>
+              Fat Goal: {userData.fat}g ± {userData.fatThreshold}g
+            </p>
           </div>
         )}
       </div>
-      <button onClick={(e) => setToggleGoal(!toggleGoal)} style={{ marginBottom: "10px" }}>
-        Switch to {toggleGoal ? "Manual" : "AI"} Mode
-      </button>
-      {toggleGoal ? (
-        <div className="goal-generator">
-          <h3>AI Goal Entry</h3>
-          {/* Fetch the goals that the user has saved. The user can add, update, or delete goals */}
-          {/* Additionally, user can use Gemini to suggest a goal */}
-          <textarea
-            placeholder="Enter your goal focus (e.g., more energy, weight loss)"
-            value={goalPrompt}
-            onChange={(e) => setGoalPrompt(e.target.value)}
-            rows={3}
-            style={{ width: "100%", marginBottom: "10px" }}
-          />
-          <button onClick={suggestGoal} style={{ margin: "10px 0" }}>
-            Suggest Goal
-          </button>
 
-          {suggestedGoal && (
-            <div>
-              <p>{suggestedGoal}</p>
-              <button onClick={saveSuggestedGoal}>Save Goal</button>
-            </div>
+      <div className="goal-container responsive-container bg-blue-50 text-black w-full sm:w-1/2 p-6 rounded-lg shadow-lg mt-4">
+        <h3 className="text-xl font-semibold">Goal Suggestor/Saver</h3>
+        <button
+          onClick={(e) => setToggleGoal(!toggleGoal)}
+          className="bg-blue-500 text-white px-4 py-2 rounded-lg mt-6"
+        >
+          Switch to {toggleGoal ? "Manual" : "AI"} Mode
+        </button>
+        {toggleGoal ? (
+          <div className="goal-generator mt-6 space-y-4">
+            <h3 className="text-2xl font-semibold text-black">AI Goal Entry</h3>
+            <textarea
+              placeholder="Enter your goal focus (e.g., more energy, weight loss)"
+              value={goalPrompt}
+              onChange={(e) => setGoalPrompt(e.target.value)}
+              rows={3}
+              className="w-full p-2 border border-gray-300 rounded-lg text-white"
+            />
+            <button onClick={suggestGoal} className="bg-green-500 text-white px-4 py-2 rounded-lg">
+              Suggest Goal
+            </button>
+
+            {suggestedGoal && (
+              <div>
+                <p>{suggestedGoal}</p>
+                <button
+                  onClick={saveSuggestedGoal}
+                  className="bg-blue-500 text-white px-4 py-2 rounded-lg mt-2"
+                >
+                  Save Goal
+                </button>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="goal-manual mt-6 space-y-4">
+            <h3 className="text-lg font-semibold">Manual Goal Entry</h3>
+            <textarea
+              placeholder="Enter your goal focus (e.g., more energy, weight loss)"
+              value={goalPrompt}
+              onChange={(e) => setGoalPrompt(e.target.value)}
+              rows={3}
+              className="w-full p-2 border border-gray-300 rounded-lg text-white"
+            />
+            <button
+              onClick={saveSuggestedGoal}
+              className="bg-blue-500 text-white px-4 py-2 rounded-lg mt-2"
+            >
+              Save Goal
+            </button>
+          </div>
+        )}
+      </div>
+
+      <div className="goal-lists">
+        <h3 className="text-lg font-semibold text-black">List of Goals</h3>
+        <div className="goal-list mt-4">
+          {userGoals.length > 0 ? (
+            <ul className="space-y-4">
+              {userGoals.map((goal, index) => (
+                <li key={index} className="bg-blue-100 p-4 rounded-lg shadow-md">
+                  <h4 className="text-md font-bold text-blue-700">Goal #{index + 1}</h4>
+                  <p className="text-sm text-gray-700 mt-2">{goal.description}</p>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-gray-500">No goals set yet.</p>
           )}
         </div>
-      ) : (
-        <div className="goal-manual">
-          <h3>Manual Goal Entry</h3>
-          <textarea
-            placeholder="Enter your goal focus (e.g., more energy, weight loss)"
-            value={goalPrompt}
-            onChange={(e) => setGoalPrompt(e.target.value)}
-            rows={3}
-            style={{ width: "100%", marginBottom: "10px" }}
-          />
-          <button onClick={saveSuggestedGoal} style={{ margin: "10px 0" }}>
-            Save Goal
-          </button>
-        </div>
-      )}
-      <div className="goal-lists">
-        <h3>List of Goals</h3>
       </div>
-      <h4>Saved Meals</h4>
+
+      <h3 className="text-2xl font-semibold mt-6 text-black">Saved Meals</h3>
       <div className="image-gallery">
         {images.length > 0 ? (
           images.map((item, index) => (

@@ -187,7 +187,7 @@ async function toggleFriend(userId, targetUser, adding) {
     }
 
     const currentUserFriends = currentUser[0].friends;
-    const isFriend = currentUserFriends.includes(targetUser[0].id);
+    const isFriend = currentUserFriends.includes(otherUser[0].id);
 
     if (adding && isFriend) {
       return {
@@ -200,9 +200,12 @@ async function toggleFriend(userId, targetUser, adding) {
     }
 
     const updateAction = adding
-      ? { $push: { friends: targetUser[0].id } }
-      : { $pull: { friends: targetUser[0].id } };
-    await usersDB.updateAsync({ id: userId }, updateAction);
+      ? { $addToSet: { friends: otherUser[0].id } }
+      : { $pull: { friends: otherUser[0].id } };
+    const newFriend = await usersDB.updateAsync({ id: currentUser[0].id }, updateAction, {
+      upsert: false,
+    });
+    console.log(newFriend);
 
     return { message: "Friend Status updated successfully" };
   } catch (e) {
@@ -218,6 +221,8 @@ app.post("/toggleFriend", async (req, res) => {
 
   try {
     const result = await toggleFriend(userId, targetUser, adding);
+
+    console.log(result);
 
     if (result.error) {
       res.status(400).json({ error: result.error });
@@ -512,8 +517,6 @@ async function suggestGoal(prompt) {
     throw Error("Prompt must be of type string");
   }
 
-  console.log(prompt);
-
   prompt = prompt.trim();
 
   if (prompt.length <= 0 || prompt.length > 50) {
@@ -554,6 +557,21 @@ async function addGoalsDescription(userId, goalDescription) {
   );
 }
 
+/**
+ * Gets all goals from the user DB
+ * @param {id} userId
+ * @returns {Array} - an array of goals represented as objects
+ */
+async function getUserGoals(userId) {
+  try {
+    const user = await usersDB.findOne({ id: userId }, { goals: 1 });
+    return user ? user.goals : [];
+  } catch (e) {
+    console.error("Error fetching user goals: ", error);
+    return [];
+  }
+}
+
 // Define route for goal suggestions
 app.post("/suggest-goal", async (req, res) => {
   try {
@@ -586,6 +604,10 @@ app.post("/add-goal-description", async (req, res) => {
 app.get("/getgoals/:id", async (req, res) => {
   try {
     // ! IMPLEMENTS
+    const userId = req.params.id;
+    const userGoals = await getUserGoals(userId);
+
+    res.json({ goals: userGoals });
   } catch (e) {
     console.error("Error fetching user goal descriptions: ", e);
     res.status(500).json({ error: "Failed to fetch user goal descriptions" });
@@ -651,16 +673,15 @@ app.post("/seenNotifications", async (req, res) => {
 //like
 //*********************meal.db using _id as mealId**************
 app.post("/reaction", async (req, res) => {
-
   try {
     // value
-    const mealId = req.body.mealId
-    const userId = req.body.userId
-    const action = req.body.action
+    const mealId = req.body.mealId;
+    const userId = req.body.userId;
+    const action = req.body.action;
 
     // find meals DB first
-    let meal = await mealsDB.findOneAsync({ _id: mealId})
-    let poster = await usersDB.findOneAsync({ id: meal.poster })
+    let meal = await mealsDB.findOneAsync({ _id: mealId });
+    let poster = await usersDB.findOneAsync({ id: meal.poster });
 
     // Update the likes or dislikes based on the action
     if (action === "like") {
@@ -669,18 +690,17 @@ app.post("/reaction", async (req, res) => {
         await addNotification(meal.poster, `${poster.username} has liked your post.`);
       }
     }
-    
+
     if (action === "dislike") {
-      meal.likes = meal.likes.filter(id => id !== userId); // Remove the userId from likes
+      meal.likes = meal.likes.filter((id) => id !== userId); // Remove the userId from likes
     }
 
     // Update the meal in the database
-    const result = await mealsDB.updateAsync({ _id: mealId}, { $set:{ likes: meal.likes}})
+    const result = await mealsDB.updateAsync({ _id: mealId }, { $set: { likes: meal.likes } });
     res.status(200).send();
-  } catch(e) {
+  } catch (e) {
     res.status(400).send(e);
   }
-
 });
 app.listen(3000, () => {
   console.log(`NutritionAI listening at http://localhost:3000`);
@@ -701,4 +721,5 @@ export {
   suggestGoal,
   addNotification,
   clearNotifications,
+  getUserGoals,
 };

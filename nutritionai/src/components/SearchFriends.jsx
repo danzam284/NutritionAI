@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useUser } from "@clerk/clerk-react";
 import axios from "axios";
+import Navbar from "./Navbar";
 
 // const mockUsers = [
 //   { id: 1, name: "Alice", isFriend: false },
@@ -76,39 +77,61 @@ function SearchFriends() {
   };
 
   return (
-    <div className="responsive-container search-friends">
-      <h2 className="responsive-heading">Search for Friends</h2>
-      <div id="nav">
-        <Link className="responsive-link" to="/">Home</Link>
+    <div className="responsive-container bg-gray-100">
+      <div className="navbar-container">
+        <h1 className="text-black font-bold text-5xl">NutritionAI</h1>
+
+        <Navbar />
       </div>
+
+      {/* Search Friends Section */}
+      <h2 className="responsive-heading text-black font-bold">Search for Friends</h2>
       <input
         type="text"
         placeholder="Search by name..."
         value={searchTerm}
         onChange={handleSearchChange}
+        className="px-4 py-2 border rounded-lg text-white-700 focus:outline-none focus:ring-2 focus:ring-blue-400"
       />
-      <button className="responsive-button" onClick={handleSearch}>Search</button>
-      <div className="results">
+      <button
+        className="responsive-button px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition"
+        onClick={handleSearch}
+      >
+        Search
+      </button>
+
+      {/* Results */}
+      <div className="results mt-8 w-full max-w-2xl">
         {filteredUsers && Array.isArray(filteredUsers) && filteredUsers.length > 0 ? (
-          filteredUsers.map((user) => (
-            <div key={user.id} className="user">
-              <span>{user.username}</span>
-              {user.isFriend ? (
-                <button
-                  className="responsive-button"
-                  onClick={() => {
-                    handleRemoveFriend(user.username);
-                  }}
-                >
-                  Remove Friend
-                </button>
-              ) : (
-                <button className="responsive-button" onClick={() => handleAddFriend(user.username)}>Add Friend</button>
-              )}
-            </div>
-          ))
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            {filteredUsers.map((user) => (
+              <div
+                key={user.id}
+                className="bg-white p-4 shadow-md rounded-lg flex flex-col items-center justify-between"
+              >
+                <span className="text-lg font-semibold text-gray-800 mb-2">{user.username}</span>
+                {user.isFriend ? (
+                  <button
+                    className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
+                    onClick={() => {
+                      handleRemoveFriend(user.username);
+                    }}
+                  >
+                    Remove Friend
+                  </button>
+                ) : (
+                  <button
+                    className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition"
+                    onClick={() => handleAddFriend(user.username)}
+                  >
+                    Add Friend
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
         ) : (
-          <p>No users found</p>
+          <p className="text-gray-600 mt-8">No users found</p>
         )}
       </div>
     </div>
@@ -116,10 +139,3 @@ function SearchFriends() {
 }
 
 export default SearchFriends;
-
-
-
-
-
-
-
