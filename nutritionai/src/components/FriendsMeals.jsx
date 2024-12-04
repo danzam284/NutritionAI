@@ -108,29 +108,33 @@ const FriendsMeals = () => {
         {meals.length > 0 ? (
           meals.map((meal, index) => (
             <div key={index}>
-              <Meal
-                score={meal["NutritionScore"]}
-                feedback={meal["NutritionFeedback"]}
-                calories={meal["calories"]}
-                fat={meal["fat"]}
-                protein={meal["protein"]}
-                carbs={meal["carbohydrates"]}
-                sodium={meal["sodium"]}
-                sugar={meal["sugar"]}
-                image={meal["base64Image"]}
-                food={meal["food"]}
-                index={index}
-              />
+              <div className="my-4">
+                <Meal
+                  score={meal["NutritionScore"]}
+                  feedback={meal["NutritionFeedback"]}
+                  calories={meal["calories"]}
+                  fat={meal["fat"]}
+                  protein={meal["protein"]}
+                  carbs={meal["carbohydrates"]}
+                  sodium={meal["sodium"]}
+                  sugar={meal["sugar"]}
+                  image={meal["base64Image"]}
+                  food={meal["food"]}
+                  index={index}
+                />
+              </div>
               {/* Like and Dislike Buttons */}
               <button
                 onClick={() => handleLikeDislike(meal._id, "like")}
                 disabled={likedMeals.includes(meal._id)} // Disable if already liked
+                className="responsive-button bg-green-200 hover:bg-green-700 text-green-800 px-12 mx-12 py-4 rounded-lg shadow-md transition-all"
               >
                 Like
               </button>
               <button
                 onClick={() => handleLikeDislike(meal._id, "dislike")}
                 disabled={!likedMeals.includes(meal._id)} // Disable if not liked
+                className="responsive-button bg-red-200 hover:bg-red-700 text-red-800 px-12 mx-12 py-4 rounded-lg shadow-md transition-all"
               >
                 Dislike
               </button>
