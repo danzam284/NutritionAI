@@ -11,6 +11,8 @@ const FriendsMeals = () => {
   const [error, setError] = useState(null);
   const [friendId, setFriendId] = useState(""); // Add state for friend's ID
   const [friendUsername, setFriendUsername] = useState('');
+  const [likedMeals, setLikedMeals] = useState([]); // Track liked meals
+
 
   useEffect(() => {
     const fetchFriendsMeals = async () => {
@@ -52,6 +54,28 @@ const FriendsMeals = () => {
 
     fetchFriendsMeals();
   }, [user, isSignedIn]);
+  
+  const handleLikeDislike = async (mealId, action) => {
+    try {
+      const response = await axios.post('http://localhost:3000/reaction', {
+        mealId: mealId,
+        userId: user.id,
+        action: action,
+      });
+
+
+      if (response.status === 200) {
+        if (action === 'like') {
+          setLikedMeals((prevLikes) => [...prevLikes, mealId]);
+        } else if (action === 'dislike') {
+          setLikedMeals((prevLikes) => prevLikes.filter((id) => id !== mealId));
+        }
+      }
+    } catch (error) {
+      console.error('Error handling like/dislike:', error);
+    }
+  };
+  
 
   if (loading) return <p>Loading...</p>;
   if (error) return <p>{error}</p>;
@@ -77,6 +101,20 @@ const FriendsMeals = () => {
                 food={meal["food"]}
                 index={index}
               />
+              {/* Like and Dislike Buttons */}
+               <button
+                onClick={() => handleLikeDislike(meal._id, 'like')}
+                disabled={likedMeals.includes(meal._id)} // Disable if already liked
+              >
+                Like
+              </button>
+              <button
+                onClick={() => handleLikeDislike(meal._id, 'dislike')}
+                disabled={!likedMeals.includes(meal._id)} // Disable if not liked
+                >
+                  Dislike
+                </button>
+              
             </div>
           ))
         ) : (
