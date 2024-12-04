@@ -12,7 +12,7 @@ import {
   updateGoals,
   suggestGoal,
   addNotification,
-  clearNotifications
+  clearNotifications,
 } from "./app.js";
 
 describe("Test Nutrition API Call", () => {
@@ -163,7 +163,6 @@ describe("Test suggestGoal function", () => {
     } else {
       await expect(sendAPIDescription("dontRemove.png", "image/png")).rejects.toThrow();
     }
-    
   });
 
   it("should throw an error for an empty prompt", async () => {
@@ -205,7 +204,10 @@ describe("Test notification related function", () => {
     const users = await getAllUsers();
     for (let i = 0; i < users.length; i++) {
       if (users[i].id === 1) {
-        expect(users[i].notifications.length.toBe(2) && users[i].notifications[1].message.toBe("Notification2"));
+        expect(
+          users[i].notifications.length.toBe(2) &&
+            users[i].notifications[1].message.toBe("Notification2")
+        );
       }
     }
 
@@ -224,7 +226,9 @@ describe("Test notification related function", () => {
     const users = await getAllUsers();
     for (let i = 0; i < users.length; i++) {
       if (users[i].id === 1) {
-        expect(users[i].notifications[0].seen.toBe(true) && users[i].notifications[1].seen.toBe(true));
+        expect(
+          users[i].notifications[0].seen.toBe(true) && users[i].notifications[1].seen.toBe(true)
+        );
       }
     }
 

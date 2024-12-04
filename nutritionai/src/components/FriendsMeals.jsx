@@ -3,6 +3,7 @@ import axios from "axios";
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Meal from "./Meal";
+import Navbar from "./Navbar";
 
 const FriendsMeals = () => {
   const { user, isSignedIn } = useUser();
@@ -10,9 +11,8 @@ const FriendsMeals = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [friendId, setFriendId] = useState(""); // Add state for friend's ID
-  const [friendUsername, setFriendUsername] = useState('');
+  const [friendUsername, setFriendUsername] = useState("");
   const [likedMeals, setLikedMeals] = useState([]); // Track liked meals
-
 
   useEffect(() => {
     const fetchFriendsMeals = async () => {
@@ -32,7 +32,7 @@ const FriendsMeals = () => {
             const friendData = await axios.get(`http://localhost:3000/user/${friendId}`);
 
             setFriendUsername(friendData.data.username); // Store friend's username
-            return friendMeals.data.map(meal => ({ ...meal, friendId }));
+            return friendMeals.data.map((meal) => ({ ...meal, friendId }));
           });
 
           const friendsMeals = await Promise.all(friendMealsPromises);
@@ -54,37 +54,57 @@ const FriendsMeals = () => {
 
     fetchFriendsMeals();
   }, [user, isSignedIn]);
-  
+
   const handleLikeDislike = async (mealId, action) => {
     try {
-      const response = await axios.post('http://localhost:3000/reaction', {
+      const response = await axios.post("http://localhost:3000/reaction", {
         mealId: mealId,
         userId: user.id,
         action: action,
       });
 
-
       if (response.status === 200) {
-        if (action === 'like') {
+        if (action === "like") {
           setLikedMeals((prevLikes) => [...prevLikes, mealId]);
-        } else if (action === 'dislike') {
+        } else if (action === "dislike") {
           setLikedMeals((prevLikes) => prevLikes.filter((id) => id !== mealId));
         }
       }
     } catch (error) {
-      console.error('Error handling like/dislike:', error);
+      console.error("Error handling like/dislike:", error);
     }
   };
-  
 
-  if (loading) return <p>Loading...</p>;
-  if (error) return <p>{error}</p>;
+  if (loading)
+    return (
+      <div className="responsive-container bg-gray-100">
+        <div>
+          <h1 className="responsive-heading text-black font-bold text-5xl">NutritionAI</h1>
+          <Navbar />
+        </div>
+        <p>Loading...</p>
+      </div>
+    );
+
+  if (error)
+    return (
+      <div className="responsive-container bg-gray-100">
+        <div>
+          <h1 className="responsive-heading text-black font-bold text-5xl">NutritionAI</h1>
+          <Navbar />
+        </div>
+        <p className="text-black">{error}</p>
+      </div>
+    );
 
   return (
-    <div className="responsive-container">
-      <h1 className="responsive-heading">This is {friendUsername}'s meals:</h1> {/* Display friend's username */}
-      <Link className="responsive-link" to="/">Home</Link>
-      <div >
+    <div className="responsive-container bg-gray-100">
+      <div>
+        <h1 className="responsive-heading text-black font-bold text-5xl">NutritionAI</h1>
+        <Navbar />
+      </div>
+      <h1 className="responsive-heading text-black">This is {friendUsername}'s meals:</h1>{" "}
+      <div>
         {meals.length > 0 ? (
           meals.map((meal, index) => (
             <div key={index}>
@@ -102,23 +122,24 @@ const FriendsMeals = () => {
                 index={index}
               />
               {/* Like and Dislike Buttons */}
-               <button
-                onClick={() => handleLikeDislike(meal._id, 'like')}
+              <button
+                onClick={() => handleLikeDislike(meal._id, "like")}
                 disabled={likedMeals.includes(meal._id)} // Disable if already liked
               >
                 Like
               </button>
               <button
-                onClick={() => handleLikeDislike(meal._id, 'dislike')}
+                onClick={() => handleLikeDislike(meal._id, "dislike")}
                 disabled={!likedMeals.includes(meal._id)} // Disable if not liked
-                >
-                  Dislike
-                </button>
-              
+              >
+                Dislike
+              </button>
             </div>
           ))
         ) : (
-          <p>No meals found.</p>
+          <div>
+            <p>No meals found.</p>
+          </div>
         )}
       </div>
     </div>

@@ -200,10 +200,12 @@ async function toggleFriend(userId, targetUser, adding) {
     }
 
     const updateAction = adding
-      ? { $push: { friends: otherUser[0].id } }
+      ? { $addToSet: { friends: otherUser[0].id } }
       : { $pull: { friends: otherUser[0].id } };
-    await usersDB.updateAsync({ id: userId }, updateAction);
-
+    const newFriend = await usersDB.updateAsync({ id: currentUser[0].id }, updateAction, {
+      upsert: false,
+    });
+    console.log(newFriend);
 
     return { message: "Friend Status updated successfully" };
   } catch (e) {
@@ -221,6 +223,8 @@ app.post("/toggleFriend", async (req, res) => {
 
   try {
     const result = await toggleFriend(userId, targetUser, adding);
+
+    console.log(result);
 
     if (result.error) {
       res.status(400).json({ error: result.error });
@@ -396,17 +400,16 @@ app.post("/upload", async (req, res) => {
     if (!user) {
       return res.status(400).send("User not found");
     }
-    const userCalorieGoal = user.calories ?? 2000;  // Default to 2000 if not set
-
+    const userCalorieGoal = user.calories ?? 2000; // Default to 2000 if not set
 
     // Compare meal calories with goal
     if (cumulativeFoodData.calories > userCalorieGoal) {
-      cumulativeFoodData.goalFeedback = `Your calorie goal of ${userCalorieGoal} kcal is not met. The pizza you're eating exceeds your goal by ${cumulativeFoodData.calories - userCalorieGoal} kcal.`;
+      cumulativeFoodData.goalFeedback = `Your calorie goal of ${userCalorieGoal} kcal is not met. The pizza you're eating exceeds your goal by ${
+        cumulativeFoodData.calories - userCalorieGoal
+      } kcal.`;
     } else {
       cumulativeFoodData.goalFeedback = `You are within your calorie goal of ${userCalorieGoal} kcal.`;
     }
-
-    
 
     // Nutrition Score
     const NutritionScorePrompt = `Here is my food, which includes the following items: ${geminiIngredients}.
@@ -516,8 +519,6 @@ async function suggestGoal(prompt) {
     throw Error("Prompt must be of type string");
   }
 
-  console.log(prompt);
-
   prompt = prompt.trim();
 
   if (prompt.length <= 0 || prompt.length > 50) {
@@ -558,6 +559,21 @@ async function addGoalsDescription(userId, goalDescription) {
   );
 }
 
+/**
+ * Gets all goals from the user DB
+ * @param {id} userId
+ * @returns {Array} - an array of goals represented as objects
+ */
+async function getUserGoals(userId) {
+  try {
+    const user = await usersDB.findOne({ id: userId }, { goals: 1 });
+    return user ? user.goals : [];
+  } catch (e) {
+    console.error("Error fetching user goals: ", error);
+    return [];
+  }
+}
+
 // Define route for goal suggestions
 app.post("/suggest-goal", async (req, res) => {
   try {
@@ -590,6 +606,10 @@ app.post("/add-goal-description", async (req, res) => {
 app.get("/getgoals/:id", async (req, res) => {
   try {
     // ! IMPLEMENTS
+    const userId = req.params.id;
+    const userGoals = await getUserGoals(userId);
+
+    res.json({ goals: userGoals });
   } catch (e) {
     console.error("Error fetching user goal descriptions: ", e);
     res.status(500).json({ error: "Failed to fetch user goal descriptions" });
@@ -626,32 +646,28 @@ app.post("/addNotification", async (req, res) => {
   try {
     await addNotification(req.body.userId, req.body.message);
     res.status(200).send();
-  } catch(e) {
+  } catch (e) {
     res.status(400).send(e);
   }
 });
 
 async function clearNotifications(userId) {
   const user = await usersDB.findOneAsync({ id: userId });
-  const updatedNotifications = user.notifications.map(notification => {
+  const updatedNotifications = user.notifications.map((notification) => {
     return {
       seen: true,
-      message: notification.message
-    }
+      message: notification.message,
+    };
   });
-  
-  await usersDB.updateAsync(
-    { id: userId },
-    { $set: { notifications: updatedNotifications } },
-    {}
-  );
+
+  await usersDB.updateAsync({ id: userId }, { $set: { notifications: updatedNotifications } }, {});
 }
 
 app.post("/seenNotifications", async (req, res) => {
   try {
     await clearNotifications(req.body.userId);
     res.status(200).send();
-  } catch(e) {
+  } catch (e) {
     res.status(400).send(e);
   }
 });
@@ -659,16 +675,15 @@ app.post("/seenNotifications", async (req, res) => {
 //like
 //*********************meal.db using _id as mealId**************
 app.post("/reaction", async (req, res) => {
-
   try {
     // value
-    const mealId = req.body.mealId
-    const userId = req.body.userId
-    const action = req.body.action
+    const mealId = req.body.mealId;
+    const userId = req.body.userId;
+    const action = req.body.action;
 
     // find meals DB first
-    let meal = await mealsDB.findOneAsync({ _id: mealId})
-    let poster = await usersDB.findOneAsync({ id: meal.poster })
+    let meal = await mealsDB.findOneAsync({ _id: mealId });
+    let poster = await usersDB.findOneAsync({ id: meal.poster });
 
     // Update the likes or dislikes based on the action
     if (action === "like") {
@@ -677,18 +692,17 @@ app.post("/reaction", async (req, res) => {
         await addNotification(meal.poster, `${poster.username} has liked your post.`);
       }
     }
-    
+
     if (action === "dislike") {
-      meal.likes = meal.likes.filter(id => id !== userId); // Remove the userId from likes
+      meal.likes = meal.likes.filter((id) => id !== userId); // Remove the userId from likes
     }
 
     // Update the meal in the database
-    const result = await mealsDB.updateAsync({ _id: mealId}, { $set:{ likes: meal.likes}})
+    const result = await mealsDB.updateAsync({ _id: mealId }, { $set: { likes: meal.likes } });
     res.status(200).send();
-  } catch(e) {
+  } catch (e) {
     res.status(400).send(e);
   }
-
 });
 app.listen(3000, () => {
   console.log(`NutritionAI listening at http://localhost:3000`);
@@ -708,5 +722,6 @@ export {
   updateGoals,
   suggestGoal,
   addNotification,
-  clearNotifications
+  clearNotifications,
+  getUserGoals,
 };
