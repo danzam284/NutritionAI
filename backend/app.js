@@ -16,6 +16,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 
 // DB
 import Datastore from "@seald-io/nedb";
+import e from "express";
 
 const app = express();
 app.use(cors());
@@ -388,7 +389,7 @@ app.post("/upload", async (req, res) => {
         }
       }
     }
-    const user = await usersDB.findOne({ id: posterId });
+    const user = usersDB.findOne({ id: posterId });
     if (!user) {
       return res.status(400).send("User not found");
     }
@@ -652,6 +653,40 @@ app.post("/seenNotifications", async (req, res) => {
   }
 });
 
+//like
+//*********************meal.db using _id as mealId**************
+app.post("/reaction", async (req, res) => {
+
+  try {
+    // value
+    const mealId = req.body.mealId
+    const userId = req.body.userId
+    const action = req.body.action
+
+    // find meals DB first
+    let meal = await mealsDB.findOneAsync({ _id: mealId})
+    let poster = await usersDB.findOneAsync({ id: meal.poster })
+
+    // Update the likes or dislikes based on the action
+    if (action === "like") {
+      if (!meal.likes.includes(userId)) {
+        meal.likes.push(userId); // Add the userId to likes
+        await addNotification(meal.poster, `${poster.username} has liked your post.`);
+      }
+    }
+    
+    if (action === "dislike") {
+      meal.likes = meal.likes.filter(id => id !== userId); // Remove the userId from likes
+    }
+
+    // Update the meal in the database
+    const result = await mealsDB.updateAsync({ _id: mealId}, { $set:{ likes: meal.likes}})
+    res.status(200).send();
+  } catch(e) {
+    res.status(400).send(e);
+  }
+
+});
 app.listen(3000, () => {
   console.log(`NutritionAI listening at http://localhost:3000`);
 });
