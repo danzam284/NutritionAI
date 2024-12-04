@@ -187,7 +187,7 @@ async function toggleFriend(userId, targetUser, adding) {
     }
 
     const currentUserFriends = currentUser[0].friends;
-    const isFriend = currentUserFriends.includes(targetUser[0].id);
+    const isFriend = currentUserFriends.includes(otherUser[0].id);
 
     if (adding && isFriend) {
       return {
@@ -200,9 +200,10 @@ async function toggleFriend(userId, targetUser, adding) {
     }
 
     const updateAction = adding
-      ? { $push: { friends: targetUser[0].id } }
-      : { $pull: { friends: targetUser[0].id } };
+      ? { $push: { friends: otherUser[0].id } }
+      : { $pull: { friends: otherUser[0].id } };
     await usersDB.updateAsync({ id: userId }, updateAction);
+
 
     return { message: "Friend Status updated successfully" };
   } catch (e) {
@@ -215,6 +216,8 @@ app.post("/toggleFriend", async (req, res) => {
   const userId = req.body.id;
   const targetUser = req.body.targetUserName;
   const adding = req.body.adding;
+
+  console.log(userId, targetUser, adding);
 
   try {
     const result = await toggleFriend(userId, targetUser, adding);

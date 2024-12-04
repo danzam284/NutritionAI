@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 import Meal from "./Meal";
 
 const FriendsMeals = () => {
-  const { user } = useUser();
+  const { user, isSignedIn } = useUser();
   const [meals, setMeals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -16,21 +16,25 @@ const FriendsMeals = () => {
     const fetchFriendsMeals = async () => {
       try {
         const response = await axios.get(`http://localhost:3000/getAllFriend/${user.id}`);
+        const cleanedResponse = response.data.filter((f) => f);
 
         // Check if we have any friends
-        if (response.data.length > 0) {
+        if (cleanedResponse.length > 0) {
           // Get the first friend's ID for example
-          setFriendId(response.data[0]);
+          setFriendId(cleanedResponse[0]);
 
-          const friendMealsPromises = response.data.map(async (friendId) => {
+          const friendMealsPromises = cleanedResponse.map(async (friendId) => {
+            if (!friendId) return;
             const friendMeals = await axios.get(`http://localhost:3000/savedmeal/${friendId}`);
             // Fetch friend's username
             const friendData = await axios.get(`http://localhost:3000/user/${friendId}`);
+
             setFriendUsername(friendData.data.username); // Store friend's username
             return friendMeals.data.map(meal => ({ ...meal, friendId }));
           });
 
           const friendsMeals = await Promise.all(friendMealsPromises);
+          console.log(friendsMeals);
           setMeals(friendsMeals.flat());
         } else {
           setError("No friends found.");
@@ -42,8 +46,12 @@ const FriendsMeals = () => {
       }
     };
 
+    if (!isSignedIn) {
+      return;
+    }
+
     fetchFriendsMeals();
-  }, [user.id]);
+  }, [user, isSignedIn]);
 
   if (loading) return <p>Loading...</p>;
   if (error) return <p>{error}</p>;
