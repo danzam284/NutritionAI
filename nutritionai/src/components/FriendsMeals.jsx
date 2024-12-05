@@ -127,14 +127,14 @@ const FriendsMeals = () => {
               <button
                 onClick={() => handleLikeDislike(meal._id, "like")}
                 disabled={likedMeals.includes(meal._id)} // Disable if already liked
-                className="responsive-button bg-green-200 hover:bg-green-700 text-green-800 px-12 mx-12 py-4 rounded-lg shadow-md transition-all"
+                className="responsive-button px-12 mx-12 py-4 rounded-lg shadow-md transition-all bg-green-200 hover:bg-green-700 text-green-800 disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed" // Disabled styles
               >
                 Like
               </button>
               <button
                 onClick={() => handleLikeDislike(meal._id, "dislike")}
                 disabled={!likedMeals.includes(meal._id)} // Disable if not liked
-                className="responsive-button bg-red-200 hover:bg-red-700 text-red-800 px-12 mx-12 py-4 rounded-lg shadow-md transition-all"
+                className="responsive-button px-12 mx-12 py-4 rounded-lg shadow-md transition-all bg-red-200 hover:bg-red-700 text-red-800 disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed"
               >
                 Dislike
               </button>
