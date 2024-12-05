@@ -9,6 +9,7 @@ As far as our technical plan for this project, we want to build an express appli
 - Daniel Zamloot
 - Mohammed Aziz
 - Johnson Lee
+- Andre Neyra
 ## Running the Application
 - cd into backend and run 'npm i'
 - cd into NutritionAI and run 'npm i'
